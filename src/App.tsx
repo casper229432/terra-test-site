@@ -1,3 +1,4 @@
+// src/App.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HamburgerMenu from "./components/HamburgerMenu";
@@ -6,7 +7,6 @@ function App() {
   const navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(true);
 
-  // 控制 audio 靜音狀態
   useEffect(() => {
     const audio = document.getElementById("bg-audio") as HTMLAudioElement | null;
     if (audio) {
@@ -21,8 +21,17 @@ function App() {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* 背景影片 */}
-      <video autoPlay loop muted className="absolute w-full h-full object-cover">
-        <source src="/bg.mp4" type="video/mp4" />
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute w-full h-full object-cover"
+      >
+        <source
+          src="https://res.cloudinary.com/dyhdaq6sx/video/upload/v1751914755/1_n8w5b6.mp4"
+          type="video/mp4"
+        />
         Your browser does not support the video tag.
       </video>
 

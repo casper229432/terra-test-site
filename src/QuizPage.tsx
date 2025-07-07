@@ -9,9 +9,13 @@ function QuizPage() {
         autoPlay
         loop
         muted
+        playsInline
         className="absolute w-full h-full object-cover"
       >
-        <source src="/bg.mp4" type="video/mp4" />
+        <source
+          src="https://res.cloudinary.com/dyhdaq6sx/video/upload/v1751914755/1_n8w5b6.mp4"
+          type="video/mp4"
+        />
         Your browser does not support the video tag.
       </video>
 
