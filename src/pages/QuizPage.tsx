@@ -14,9 +14,12 @@ const QuestionDisplay = () => {
     goToNext,
     goToPrev,
     hasGoneBack,
+    getResult,
   } = useQuiz();
 
   const navigate = useNavigate();
+  const currentAnswer = answers[currentQuestion];
+  const allAnswered = questions.length === answers.length && answers.every(a => a !== null);
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
     selectAnswer(currentQuestion, value);
@@ -26,8 +29,16 @@ const QuestionDisplay = () => {
   };
 
   const handleNext = () => {
-    goToNext();
+    if (currentQuestion < questions.length - 1) {
+      goToNext();
+    } else if (allAnswered) {
+      const result = getResult();
+      navigate("/result", { state: { result } });
+    }
   };
+
+  const isLastQuestion = currentQuestion === questions.length - 1;
+  const disableNext = isLastQuestion ? !allAnswered : !currentAnswer;
 
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
@@ -63,9 +74,14 @@ const QuestionDisplay = () => {
         )}
         <button
           onClick={handleNext}
-          className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white"
+          disabled={disableNext}
+          className={`px-4 py-2 rounded ${
+            disableNext
+              ? "bg-gray-500 cursor-not-allowed text-white"
+              : "bg-white/80 text-black hover:bg-white"
+          }`}
         >
-          {currentQuestion < questions.length - 1 ? "下一頁" : "查看結果"}
+          {isLastQuestion ? "查看結果" : "下一頁"}
         </button>
       </div>
     </div>
@@ -81,7 +97,7 @@ function QuizPage() {
         <video
           autoPlay
           loop
-          muted  // 這裡寫死靜音，保證手機正常播放
+          muted={!isMusicOn}
           playsInline
           className="absolute w-full h-full object-cover"
         >
