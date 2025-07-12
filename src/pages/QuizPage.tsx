@@ -16,6 +16,7 @@ const QuestionDisplay = () => {
     hasGoneBack,
   } = useQuiz();
 
+  const navigate = useNavigate();
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
     selectAnswer(currentQuestion, value);
@@ -25,7 +26,6 @@ const QuestionDisplay = () => {
   };
 
   const handleNext = () => {
-    // 正確做法：直接交給 context 裡的 goToNext() 處理跳轉與計分
     goToNext();
   };
 
@@ -81,7 +81,7 @@ function QuizPage() {
         <video
           autoPlay
           loop
-          muted={!isMusicOn}
+          muted  // 這裡寫死靜音，保證手機正常播放
           playsInline
           className="absolute w-full h-full object-cover"
         >
