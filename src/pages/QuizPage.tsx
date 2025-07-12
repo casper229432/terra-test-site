@@ -13,32 +13,29 @@ const QuestionDisplay = () => {
     selectAnswer,
     goToNext,
     goToPrev,
-    hasGoneBack,
     getResult,
   } = useQuiz();
 
   const navigate = useNavigate();
-  const currentAnswer = answers[currentQuestion];
-  const allAnswered = questions.length === answers.length && answers.every(a => a !== null);
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
     selectAnswer(currentQuestion, value);
-    if (!hasGoneBack && currentQuestion < questions.length - 1) {
-      goToNext();
-    }
   };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
       goToNext();
-    } else if (allAnswered) {
+    } else {
       const result = getResult();
-      navigate("/result", { state: { result } });
+      if (result) {
+        navigate("/result", { state: { result } });
+      } else {
+        alert("⚠️ 尚有題目未完成，請回答所有題目後再查看結果。");
+      }
     }
   };
 
-  const isLastQuestion = currentQuestion === questions.length - 1;
-  const disableNext = isLastQuestion ? !allAnswered : !currentAnswer;
+  const isAnswerSelected = answers[currentQuestion] !== null;
 
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
@@ -74,14 +71,14 @@ const QuestionDisplay = () => {
         )}
         <button
           onClick={handleNext}
-          disabled={disableNext}
+          disabled={!isAnswerSelected}
           className={`px-4 py-2 rounded ${
-            disableNext
-              ? "bg-gray-500 cursor-not-allowed text-white"
-              : "bg-white/80 text-black hover:bg-white"
+            isAnswerSelected
+              ? "bg-white/80 text-black hover:bg-white"
+              : "bg-gray-500 cursor-not-allowed"
           }`}
         >
-          {isLastQuestion ? "查看結果" : "下一頁"}
+          {currentQuestion < questions.length - 1 ? "下一頁" : "查看結果"}
         </button>
       </div>
     </div>
