@@ -1,10 +1,11 @@
 // src/pages/QuizPage.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
 import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
 import { questions } from "../data/questions";
+import StarfieldTransition from "../components/StarfieldTransition";
 
 const QuestionDisplay = () => {
   const {
@@ -87,15 +88,29 @@ const QuestionDisplay = () => {
 
 function QuizPage() {
   const { isMusicOn, toggleMusic } = useMusic();
+  const [showTransition, setShowTransition] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTransition(false);
+    }, 2600); // 黑頻1.7s + 星體0.9s = 2.6秒
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <QuizProvider>
       <div className="relative w-screen h-screen overflow-hidden">
+        {/* Starfield transition */}
+        {showTransition && <StarfieldTransition />}
+
+        {/* Background Video */}
         <video
           autoPlay
           loop
           muted={!isMusicOn}
           playsInline
+          preload="auto"
           className="absolute w-full h-full object-cover"
         >
           <source
@@ -104,11 +119,15 @@ function QuizPage() {
           />
         </video>
 
+        {/* Overlay */}
         <div className="absolute w-full h-full bg-black/60 z-10" />
 
-        <div className="relative z-20 w-full h-full flex items-center justify-center">
-          <QuestionDisplay />
-        </div>
+        {/* Quiz Content */}
+        {!showTransition && (
+          <div className="relative z-20 w-full h-full flex items-center justify-center">
+            <QuestionDisplay />
+          </div>
+        )}
 
         <HamburgerMenu isMuted={!isMusicOn} toggleMute={toggleMusic} />
       </div>
