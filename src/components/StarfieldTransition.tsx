@@ -1,4 +1,3 @@
-// src/components/StarfieldTransition.tsx
 import React, { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
@@ -49,12 +48,12 @@ export default function StarfieldTransition({ onComplete }: { onComplete?: () =>
 
   useEffect(() => {
     const timer1 = setTimeout(() => {
-      setShowStars(true); // 1.7 秒後啟動星體動畫
+      setShowStars(true); // 啟動星體
     }, 1700);
 
     const timer2 = setTimeout(() => {
-      if (onComplete) onComplete();
-    }, 4000); // 全部約 4 秒（黑屏 + 字幕 + 星體）後跳轉
+      if (onComplete) onComplete(); // 4 秒後通知完成
+    }, 4000);
 
     return () => {
       clearTimeout(timer1);
@@ -70,19 +69,21 @@ export default function StarfieldTransition({ onComplete }: { onComplete?: () =>
       transition={{ duration: 0.5 }}
       className="fixed top-0 left-0 w-screen h-screen bg-black z-[9999]"
     >
-      {/* Subtitle：黑頻時出現 */}
-      <motion.div
-        className="absolute top-1/2 left-1/2 text-white text-xl md:text-2xl font-semibold"
-        style={{ transform: "translate(-50%, -50%)" }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ delay: 0.3, duration: 1.7 }}
-      >
-        命運，不會給你第二次機會。
-      </motion.div>
+      {/* Subtitle（只在黑頻階段出現） */}
+      {!showStars && (
+        <motion.div
+          className="absolute top-1/2 left-1/2 text-white text-xl md:text-2xl font-semibold"
+          style={{ transform: "translate(-50%, -50%)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ delay: 0.3, duration: 1.7 }}
+        >
+          命運，不會給你第二次機會。
+        </motion.div>
+      )}
 
-      {/* Starfield Canvas：延後出現 */}
+      {/* Starfield Canvas（延後 1.7 秒啟動） */}
       {showStars && (
         <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
           <Stars />
