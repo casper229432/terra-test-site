@@ -4,6 +4,9 @@ import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postpro
 import { Vector3, Object3D, InstancedMesh } from "three";
 import { motion } from "framer-motion";
 
+// 用 module-level flag 防止字幕重複出現
+let subtitleShown = false;
+
 const STAR_COUNT = 1000;
 
 function Stars() {
@@ -45,14 +48,24 @@ function Stars() {
 
 export default function StarfieldTransition({ onComplete }: { onComplete?: () => void }) {
   const [showStars, setShowStars] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(false);
 
   useEffect(() => {
-    const timer1 = setTimeout(() => {
-      setShowStars(true); // 啟動星體
+    let timer1: NodeJS.Timeout;
+    let timer2: NodeJS.Timeout;
+
+    if (!subtitleShown) {
+      setShowSubtitle(true);
+      subtitleShown = true;
+    }
+
+    timer1 = setTimeout(() => {
+      setShowStars(true);
+      setShowSubtitle(false);
     }, 1700);
 
-    const timer2 = setTimeout(() => {
-      if (onComplete) onComplete(); // 4 秒後通知完成
+    timer2 = setTimeout(() => {
+      if (onComplete) onComplete();
     }, 4000);
 
     return () => {
@@ -69,21 +82,21 @@ export default function StarfieldTransition({ onComplete }: { onComplete?: () =>
       transition={{ duration: 0.5 }}
       className="fixed top-0 left-0 w-screen h-screen bg-black z-[9999]"
     >
-      {/* Subtitle（只在黑頻階段出現） */}
-      {!showStars && (
+      {/* Subtitle：只顯示一次 */}
+      {showSubtitle && (
         <motion.div
           className="absolute top-1/2 left-1/2 text-white text-xl md:text-2xl font-semibold"
           style={{ transform: "translate(-50%, -50%)" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ delay: 0.3, duration: 1.7 }}
+          transition={{ duration: 1.7 }}
         >
           命運，不會給你第二次機會。
         </motion.div>
       )}
 
-      {/* Starfield Canvas（延後 1.7 秒啟動） */}
+      {/* 星體動畫 */}
       {showStars && (
         <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
           <Stars />
