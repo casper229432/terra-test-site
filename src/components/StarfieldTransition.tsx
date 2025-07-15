@@ -1,5 +1,5 @@
 // src/components/StarfieldTransition.tsx
-import React, { useRef, useMemo, useEffect } from "react";
+import React, { useRef, useMemo, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector3, Object3D, InstancedMesh } from "three";
@@ -45,12 +45,21 @@ function Stars() {
 }
 
 export default function StarfieldTransition({ onComplete }: { onComplete?: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (onComplete) onComplete();
-    }, 3300); // 動畫約 3.3s 後觸發切換
+  const [showStars, setShowStars] = useState(false);
 
-    return () => clearTimeout(timer);
+  useEffect(() => {
+    const timer1 = setTimeout(() => {
+      setShowStars(true); // 1.7 秒後啟動星體動畫
+    }, 1700);
+
+    const timer2 = setTimeout(() => {
+      if (onComplete) onComplete();
+    }, 4000); // 全部約 4 秒（黑屏 + 字幕 + 星體）後跳轉
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, [onComplete]);
 
   return (
@@ -61,7 +70,7 @@ export default function StarfieldTransition({ onComplete }: { onComplete?: () =>
       transition={{ duration: 0.5 }}
       className="fixed top-0 left-0 w-screen h-screen bg-black z-[9999]"
     >
-      {/* Subtitle */}
+      {/* Subtitle：黑頻時出現 */}
       <motion.div
         className="absolute top-1/2 left-1/2 text-white text-xl md:text-2xl font-semibold"
         style={{ transform: "translate(-50%, -50%)" }}
@@ -73,14 +82,16 @@ export default function StarfieldTransition({ onComplete }: { onComplete?: () =>
         命運，不會給你第二次機會。
       </motion.div>
 
-      {/* Starfield Canvas */}
-      <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
-        <Stars />
-        <EffectComposer>
-          <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} />
-          <ChromaticAberration offset={[0.001, 0.001]} />
-        </EffectComposer>
-      </Canvas>
+      {/* Starfield Canvas：延後出現 */}
+      {showStars && (
+        <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+          <Stars />
+          <EffectComposer>
+            <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} />
+            <ChromaticAberration offset={[0.001, 0.001]} />
+          </EffectComposer>
+        </Canvas>
+      )}
     </motion.div>
   );
 }
