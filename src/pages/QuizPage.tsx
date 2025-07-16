@@ -1,11 +1,15 @@
 // src/pages/QuizPage.tsx
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
 import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
 import { questions } from "../data/questions";
-import StarfieldTransition from "../components/StarfieldTransition";
+
+type OptionType = {
+  text: string;
+  type: "A" | "B" | "C" | "D";
+};
 
 const QuestionDisplay = () => {
   const {
@@ -24,7 +28,7 @@ const QuestionDisplay = () => {
   };
 
   const handleNext = () => {
-    if (currentQuestion < questions.length - 1) {
+    if (currentQuestion < 14) {
       goToNext();
     } else {
       const result = getResult();
@@ -40,25 +44,27 @@ const QuestionDisplay = () => {
 
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
-      <div className="text-xl">{`第 ${currentQuestion + 1} 題 / ${questions.length}`}</div>
+      <div className="text-xl">{`第 ${currentQuestion + 1} 題 / 15`}</div>
       <div className="text-2xl font-semibold max-w-xl">
         {questions[currentQuestion].question}
       </div>
 
       <div className="grid grid-cols-2 gap-4 mt-6">
-        {questions[currentQuestion].options.map((opt, index) => (
-          <button
-            key={index}
-            onClick={() => handleSelect(opt.type)}
-            className={`px-6 py-3 rounded-lg text-lg font-medium border ${
-              answers[currentQuestion] === opt.type
-                ? "bg-white text-black"
-                : "bg-black/30 text-white"
-            } hover:bg-white hover:text-black transition`}
-          >
-            {opt.text}
-          </button>
-        ))}
+        {questions[currentQuestion].options.map(
+          (opt: OptionType, index: number) => (
+            <button
+              key={index}
+              onClick={() => handleSelect(opt.type)}
+              className={`px-6 py-3 rounded-lg text-lg font-medium border ${
+                answers[currentQuestion] === opt.type
+                  ? "bg-white text-black"
+                  : "bg-black/30 text-white"
+              } hover:bg-white hover:text-black transition`}
+            >
+              {opt.text}
+            </button>
+          )
+        )}
       </div>
 
       <div className="flex space-x-4 mt-10">
@@ -79,7 +85,7 @@ const QuestionDisplay = () => {
               : "bg-gray-500 cursor-not-allowed"
           }`}
         >
-          {currentQuestion < questions.length - 1 ? "下一頁" : "查看結果"}
+          {currentQuestion < 14 ? "下一頁" : "查看結果"}
         </button>
       </div>
     </div>
@@ -88,23 +94,10 @@ const QuestionDisplay = () => {
 
 function QuizPage() {
   const { isMusicOn, toggleMusic } = useMusic();
-  const [showTransition, setShowTransition] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowTransition(false);
-    }, 2600); // 黑頻1.7s + 星體0.9s = 2.6秒
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <QuizProvider>
       <div className="relative w-screen h-screen overflow-hidden">
-        {/* Starfield transition */}
-        {showTransition && <StarfieldTransition />}
-
-        {/* Background Video */}
         <video
           autoPlay
           loop
@@ -119,15 +112,11 @@ function QuizPage() {
           />
         </video>
 
-        {/* Overlay */}
         <div className="absolute w-full h-full bg-black/60 z-10" />
 
-        {/* Quiz Content */}
-        {!showTransition && (
-          <div className="relative z-20 w-full h-full flex items-center justify-center">
-            <QuestionDisplay />
-          </div>
-        )}
+        <div className="relative z-20 w-full h-full flex items-center justify-center">
+          <QuestionDisplay />
+        </div>
 
         <HamburgerMenu isMuted={!isMusicOn} toggleMute={toggleMusic} />
       </div>
