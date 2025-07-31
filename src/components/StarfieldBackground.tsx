@@ -22,11 +22,9 @@ function Stars() {
   useFrame(() => {
     if (!mesh.current) return;
 
-    const speed = 1.5; // ✅ 固定速度，不加速也不變慢
-
     for (let i = 0; i < STAR_COUNT; i++) {
       const pos = positions[i];
-      pos.z += speed;
+      pos.z += 0.02; // 恆定緩慢速度
       if (pos.z > 0) pos.z = -200;
 
       dummy.position.set(pos.x, pos.y, pos.z);

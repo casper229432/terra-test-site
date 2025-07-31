@@ -2,11 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import HamburgerMenu from '../components/HamburgerMenu';
 import StarfieldTransition from '../components/StarfieldTransition';
+import StarfieldBackground from '../components/StarfieldBackground'; // ✅ 加入背景星星
 import { motion } from 'framer-motion';
-
-const BackgroundEffect = () => (
-  <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black animate-pulse opacity-60 z-0" />
-);
 
 const NewStartPage = () => {
   const navigate = useNavigate();
@@ -22,17 +19,17 @@ const NewStartPage = () => {
 
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black text-white overflow-hidden">
-      {/* 背景效果 */}
-      <BackgroundEffect />
+      {/* ✅ 背景星星動畫 */}
+      <StarfieldBackground />
 
-      {/* 過場動畫 */}
+      {/* ✅ 過場動畫 */}
       {isTransitioning && (
         <div className="absolute inset-0 z-50">
           <StarfieldTransition onComplete={handleTransitionEnd} />
         </div>
       )}
 
-      {/* UI 內容（非過場時顯示） */}
+      {/* ✅ UI 內容（非過場時顯示） */}
       {!isTransitioning && (
         <>
           {/* 漢堡選單 */}
@@ -40,7 +37,7 @@ const NewStartPage = () => {
             <HamburgerMenu isMuted={false} toggleMute={() => {}} />
           </div>
 
-          {/* LOGO 與按鈕居中顯示 */}
+          {/* LOGO 與按鈕 */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center space-y-6">
             <img src="/logo.svg" alt="TERRA Logo" className="w-40 h-40" />
             <motion.button
