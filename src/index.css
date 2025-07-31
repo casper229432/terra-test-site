@@ -1,4 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:ital,wght@1,700&display=swap');
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 
 @tailwind base;
 @tailwind components;
