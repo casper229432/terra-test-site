@@ -1,9 +1,12 @@
+// src/components/GlobalBackground.tsx
+
 import React, { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector3, Object3D, InstancedMesh } from "three";
 
 const STAR_COUNT = 1000;
+const SPEED = 1.0;
 
 function Stars() {
   const mesh = useRef<InstancedMesh | null>(null);
@@ -22,11 +25,9 @@ function Stars() {
   useFrame(() => {
     if (!mesh.current) return;
 
-    const speed = 1.5; // ✅ 固定速度，不加速也不變慢
-
     for (let i = 0; i < STAR_COUNT; i++) {
       const pos = positions[i];
-      pos.z += speed;
+      pos.z += SPEED;
       if (pos.z > 0) pos.z = -200;
 
       dummy.position.set(pos.x, pos.y, pos.z);
@@ -44,7 +45,7 @@ function Stars() {
   );
 }
 
-export default function StarfieldBackground() {
+export default function GlobalBackground() {
   return (
     <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none">
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HamburgerMenu from "./components/HamburgerMenu";
 import StarfieldTransition from "./components/StarfieldTransition";
-import StarCanvasBackground from "./components/StarCanvasBackground";
+import StarCanvasBackground from "./components/GlobalBackground";
 import { motion } from "framer-motion";
 
 function App() {
