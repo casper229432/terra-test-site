@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import StarCanvasBackground from '@/components/GlobalBackground';
+import StarCanvasBackground from '@/components/StarCanvasBackground'; // 修正這一行
 
 const StartPage = () => {
   const navigate = useNavigate();
