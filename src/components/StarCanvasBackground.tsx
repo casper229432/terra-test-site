@@ -1,12 +1,10 @@
-// src/components/GlobalBackground.tsx
-
 import React, { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
 import { Vector3, Object3D, InstancedMesh } from "three";
 
 const STAR_COUNT = 1000;
-const SPEED = 1.0;
+const SPEED = 0.63;
 
 function Stars() {
   const mesh = useRef<InstancedMesh | null>(null);
@@ -45,10 +43,14 @@ function Stars() {
   );
 }
 
-export default function GlobalBackground() {
+export default function StarCanvasBackground() {
   return (
-    <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none">
-      <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
+    <div className="absolute top-0 left-0 w-screen h-screen z-0 pointer-events-none">
+      {/* 🔧 修正：加入 !filter-none 強制移除灰階 */}
+      <Canvas
+        className="w-full h-full !filter-none"
+        camera={{ position: [0, 0, 5], fov: 75 }}
+      >
         <Stars />
         <EffectComposer>
           <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} />

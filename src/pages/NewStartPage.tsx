@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import HamburgerMenu from '../components/HamburgerMenu';
 import StarfieldTransition from '../components/StarfieldTransition';
-import StarfieldBackground from '../components/StarfieldBackground'; // ✅ 加入背景星星
+import StarCanvasBackground from '../components/StarCanvasBackground'; // ✅ 改這行
 import { motion } from 'framer-motion';
 
 const NewStartPage = () => {
@@ -14,13 +14,13 @@ const NewStartPage = () => {
   };
 
   const handleTransitionEnd = () => {
-    navigate('/quiz');
+    navigate('/quiz2');
   };
 
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black text-white overflow-hidden">
-      {/* ✅ 背景星星動畫 */}
-      <StarfieldBackground />
+      {/* ✅ 使用你自訂的星星背景 */}
+      <StarCanvasBackground />
 
       {/* ✅ 過場動畫 */}
       {isTransitioning && (

@@ -15,7 +15,7 @@ function App() {
   };
 
   const handleTransitionEnd = () => {
-    navigate("/quiz");
+    navigate("/quiz2");
   };
 
   return (

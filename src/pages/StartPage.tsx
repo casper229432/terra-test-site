@@ -10,7 +10,7 @@ const StartPage = () => {
   const handleStart = () => {
     setStartClicked(true);
     setTimeout(() => {
-      navigate('/quiz');
+      navigate('/quiz2');
     }, 2600); // 對應動畫時長
   };
 

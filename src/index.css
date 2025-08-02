@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:ital,wght@1,700&display=swap');
+
 html,
 body,
 #root {
@@ -8,10 +9,16 @@ body,
   padding: 0;
 }
 
+/* ✅ 強制讓所有 canvas 不受灰階或其他濾鏡影響 */
+canvas {
+  filter: none !important;
+  -webkit-filter: none !important;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @keyframes fade-in {
   from {
     opacity: 0;
