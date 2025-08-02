@@ -1,10 +1,5 @@
 // src/context/QuizContext.tsx
-import React, {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { questions } from "../data/questions";
 
@@ -18,6 +13,7 @@ interface QuizContextType {
   goToPrev: () => void;
   hasGoneBack: boolean;
   getResult: () => { A: number; B: number; C: number; D: number };
+  resetQuiz: () => void;
 }
 
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
@@ -60,6 +56,12 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
     return scoreMap;
   };
 
+  const resetQuiz = () => {
+    setCurrentQuestion(0);
+    setAnswers(Array(questions.length).fill(null));
+    setHasGoneBack(false);
+  };
+
   return (
     <QuizContext.Provider
       value={{
@@ -70,6 +72,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
         goToPrev,
         hasGoneBack,
         getResult,
+        resetQuiz,
       }}
     >
       {children}

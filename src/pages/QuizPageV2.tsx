@@ -1,3 +1,4 @@
+// src/pages/QuizPageV2.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
@@ -19,26 +20,34 @@ const QuestionDisplay = () => {
   const navigate = useNavigate();
   const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
 
-  // 自動跳下一題後清除「hasVisitedPrevious」
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
+    // 儲存當前選擇
     selectAnswer(currentQuestion, value);
-    setTimeout(() => {
-      if (currentQuestion < 14) {
-        setHasVisitedPrevious(false); // 重設狀態
+
+    if (currentQuestion === questions.length - 1) {
+      // 🔧 最後一題：直接用 answers 副本計算結果，確保答案已納入
+      setTimeout(() => {
+        const updatedAnswers = [...answers];
+        updatedAnswers[currentQuestion] = value;
+
+        const scoreMap = { A: 0, B: 0, C: 0, D: 0 };
+        updatedAnswers.forEach((ans) => {
+          if (ans) scoreMap[ans]++;
+        });
+
+        navigate("/result", { state: { result: scoreMap } });
+      }, 300); // 保留 UI 節奏
+    } else {
+      // 其他題：正常跳下一題
+      setTimeout(() => {
+        setHasVisitedPrevious(false);
         goToNext();
-      } else {
-        const result = getResult();
-        if (result) {
-          navigate("/result", { state: { result } });
-        } else {
-          alert("⚠️ 尚有題目未完成，請回答所有題目後再查看結果。");
-        }
-      }
-    }, 300); // 增加延遲避免過快跳頁
+      }, 300);
+    }
   };
 
   const handlePrev = () => {
-    setHasVisitedPrevious(true); // 代表使用者點過上一頁
+    setHasVisitedPrevious(true);
     goToPrev();
   };
 
@@ -83,7 +92,7 @@ const QuestionDisplay = () => {
             }}
             className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white"
           >
-            {currentQuestion < 14 ? "下一頁" : "查看結果"}
+            {currentQuestion < questions.length - 1 ? "下一頁" : "查看結果"}
           </button>
         )}
       </div>
