@@ -4,7 +4,7 @@ import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postpro
 import { Vector3, Object3D, InstancedMesh } from "three";
 
 const STAR_COUNT = 1000;
-const SPEED = 0.63;
+const SPEED = 0.2;
 
 function Stars() {
   const mesh = useRef<InstancedMesh | null>(null);
