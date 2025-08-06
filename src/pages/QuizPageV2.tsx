@@ -19,7 +19,7 @@ const QuestionDisplay: React.FC = () => {
 
   const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
 
-  // 全局 touchstart 时 blur
+  // 全局 touchstart blur
   useEffect(() => {
     const handleTouch = () => {
       if (document.activeElement instanceof HTMLElement) {
@@ -30,7 +30,7 @@ const QuestionDisplay: React.FC = () => {
     return () => window.removeEventListener("touchstart", handleTouch);
   }, []);
 
-  // 每次切题时 blur
+  // 切题时 blur
   useEffect(() => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -38,11 +38,10 @@ const QuestionDisplay: React.FC = () => {
   }, [currentQuestion]);
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
-    // blur 防残留
+    // 失焦
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-
     selectAnswer(currentQuestion, value);
 
     if (currentQuestion === questions.length - 1) {
@@ -78,13 +77,16 @@ const QuestionDisplay: React.FC = () => {
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
       <div className="text-xl">{`第 ${currentQuestion + 1} 題 / ${questions.length}`}</div>
-      <div className="text-2xl font-semibold max-w-xl">{questions[currentQuestion].question}</div>
+      <div className="text-2xl font-semibold max-w-xl">
+        {questions[currentQuestion].question}
+      </div>
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         {questions[currentQuestion].options.map((opt, idx) => (
           <button
             key={idx}
             onClick={() => handleSelect(opt.type)}
+            onTouchStart={(e) => e.currentTarget.blur()}
             className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none ${
               answers[currentQuestion] === opt.type
                 ? "bg-white text-black"
@@ -100,14 +102,17 @@ const QuestionDisplay: React.FC = () => {
         {currentQuestion > 0 && (
           <button
             onClick={handlePrev}
+            onTouchStart={(e) => e.currentTarget.blur()}
             className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none"
           >
             上一頁
           </button>
         )}
+
         {hasVisitedPrevious && currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
+            onTouchStart={(e) => e.currentTarget.blur()}
             className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none"
           >
             下一頁
