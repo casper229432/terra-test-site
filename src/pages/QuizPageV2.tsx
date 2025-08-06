@@ -14,14 +14,23 @@ const QuestionDisplay: React.FC = () => {
     selectAnswer,
     goToNext,
     goToPrev,
-    // getResult,  ← 改成本地计算
   } = useQuiz();
   const navigate = useNavigate();
 
-  // 控制“上一页”后才显示“下一页”
   const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
 
-  // 每次切题，删掉任何残留聚焦
+  // 全局 touchstart 时 blur
+  useEffect(() => {
+    const handleTouch = () => {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    };
+    window.addEventListener("touchstart", handleTouch, { passive: true });
+    return () => window.removeEventListener("touchstart", handleTouch);
+  }, []);
+
+  // 每次切题时 blur
   useEffect(() => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
@@ -29,25 +38,20 @@ const QuestionDisplay: React.FC = () => {
   }, [currentQuestion]);
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
-    // 先 blur 防残留
+    // blur 防残留
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    // 记录答案
     selectAnswer(currentQuestion, value);
 
     if (currentQuestion === questions.length - 1) {
-      // 最后一题，计算完整分数
       const updated = [...answers];
       updated[currentQuestion] = value;
       const scoreMap = { A: 0, B: 0, C: 0, D: 0 };
       updated.forEach((ans) => ans && scoreMap[ans]++);
-      setTimeout(() => {
-        navigate("/result", { state: { result: scoreMap } });
-      }, 300);
+      setTimeout(() => navigate("/result", { state: { result: scoreMap } }), 300);
     } else {
-      // 非最后一题：延迟跳下一题
       setTimeout(() => {
         setHasVisitedPrevious(false);
         goToNext();
@@ -56,7 +60,6 @@ const QuestionDisplay: React.FC = () => {
   };
 
   const handlePrev = () => {
-    // blur 防残留
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -65,7 +68,6 @@ const QuestionDisplay: React.FC = () => {
   };
 
   const handleManualNext = () => {
-    // blur 防残留
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -76,9 +78,7 @@ const QuestionDisplay: React.FC = () => {
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
       <div className="text-xl">{`第 ${currentQuestion + 1} 題 / ${questions.length}`}</div>
-      <div className="text-2xl font-semibold max-w-xl">
-        {questions[currentQuestion].question}
-      </div>
+      <div className="text-2xl font-semibold max-w-xl">{questions[currentQuestion].question}</div>
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         {questions[currentQuestion].options.map((opt, idx) => (
@@ -105,7 +105,6 @@ const QuestionDisplay: React.FC = () => {
             上一頁
           </button>
         )}
-
         {hasVisitedPrevious && currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
@@ -125,17 +124,13 @@ const QuizPageV2: React.FC = () => {
   return (
     <QuizProvider>
       <div className="relative w-screen h-screen overflow-hidden bg-black">
-        {/* 星星背景 */}
         <div className="absolute inset-0 z-0">
           <StarCanvasBackground />
         </div>
-        {/* 半透遮罩 */}
         <div className="absolute inset-0 bg-black/60 z-10" />
-        {/* 題目區 */}
         <div className="relative z-20 w-full h-full flex items-center justify-center">
           <QuestionDisplay />
         </div>
-        {/* 漢堡選單 */}
         <div className="absolute top-4 right-4 z-30">
           <HamburgerMenu isMuted={!isMusicOn} toggleMute={toggleMusic} />
         </div>

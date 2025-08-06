@@ -9,10 +9,24 @@ body,
   padding: 0;
 }
 
-/* ✅ 強制讓所有 canvas 不受灰階或其他濾鏡影響 */
+/* 强制让所有 canvas 不受灰阶或其他滤镜影响 */
 canvas {
   filter: none !important;
   -webkit-filter: none !important;
+}
+
+/* 1. 彻底移除聚焦 outline 和阴影 */
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 2. 关闭移动端 tap 高亮 & 选中样式 */
+html, body, button, input, a {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 @tailwind base;
