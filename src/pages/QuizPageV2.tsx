@@ -1,5 +1,5 @@
 // src/pages/QuizPageV2.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
 import HamburgerMenu from "../components/HamburgerMenu";
@@ -14,38 +14,40 @@ const QuestionDisplay: React.FC = () => {
     selectAnswer,
     goToNext,
     goToPrev,
-    // getResult,  ← 不再用 context 的 getResult，改本地計算
+    // getResult,  ← 改成本地计算
   } = useQuiz();
   const navigate = useNavigate();
 
-  // 按過上一頁才顯示「下一頁」
+  // 控制“上一页”后才显示“下一页”
   const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
 
+  // 每次切题，删掉任何残留聚焦
+  useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  }, [currentQuestion]);
+
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
-    // 解除手機焦點殘留
+    // 先 blur 防残留
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
 
-    // 先寫入 context
+    // 记录答案
     selectAnswer(currentQuestion, value);
 
     if (currentQuestion === questions.length - 1) {
-      // 最後一題：用本地陣列計算所有分數
+      // 最后一题，计算完整分数
       const updated = [...answers];
       updated[currentQuestion] = value;
-
       const scoreMap = { A: 0, B: 0, C: 0, D: 0 };
-      updated.forEach((ans) => {
-        if (ans) scoreMap[ans]++;
-      });
-
-      // 延遲保留過場
+      updated.forEach((ans) => ans && scoreMap[ans]++);
       setTimeout(() => {
         navigate("/result", { state: { result: scoreMap } });
       }, 300);
     } else {
-      // 非最後一題：自動跳下一題
+      // 非最后一题：延迟跳下一题
       setTimeout(() => {
         setHasVisitedPrevious(false);
         goToNext();
@@ -54,12 +56,19 @@ const QuestionDisplay: React.FC = () => {
   };
 
   const handlePrev = () => {
+    // blur 防残留
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setHasVisitedPrevious(true);
     goToPrev();
   };
 
   const handleManualNext = () => {
-    // 必須按過上一頁才可
+    // blur 防残留
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     setHasVisitedPrevious(false);
     goToNext();
   };
@@ -76,7 +85,7 @@ const QuestionDisplay: React.FC = () => {
           <button
             key={idx}
             onClick={() => handleSelect(opt.type)}
-            className={`px-6 py-3 rounded-lg text-lg font-medium border ${
+            className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none ${
               answers[currentQuestion] === opt.type
                 ? "bg-white text-black"
                 : "bg-black/30 text-white"
@@ -91,7 +100,7 @@ const QuestionDisplay: React.FC = () => {
         {currentQuestion > 0 && (
           <button
             onClick={handlePrev}
-            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white"
+            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none"
           >
             上一頁
           </button>
@@ -100,7 +109,7 @@ const QuestionDisplay: React.FC = () => {
         {hasVisitedPrevious && currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
-            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white"
+            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none"
           >
             下一頁
           </button>
