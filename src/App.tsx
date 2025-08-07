@@ -23,8 +23,12 @@ const App: React.FC = () => {
     return () => window.removeEventListener("touchstart", handleTouchStart);
   }, []);
 
+  // 点击“开始测验”时：失焦 + 开启音乐 + 进过场
   const handleStart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.blur();
+    if (!isMusicOn) {
+      toggleMusic();
+    }
     setIsTransitioning(true);
   };
   const handleTransitionEnd = () => navigate("/quiz2");

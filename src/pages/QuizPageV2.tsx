@@ -31,7 +31,7 @@ const QuestionDisplay: React.FC = () => {
     return () => window.removeEventListener("touchstart", handleTouch);
   }, []);
 
-  // 切题时 reset isSwitching 并 blur
+  // 切题时重置切换锁并失焦
   useEffect(() => {
     setIsSwitching(false);
     if (document.activeElement instanceof HTMLElement) {
@@ -131,6 +131,12 @@ const QuestionDisplay: React.FC = () => {
 
 const QuizPageV2: React.FC = () => {
   const { isMusicOn, toggleMusic } = useMusic();
+
+  // 仅在组件挂载时自动播放音乐（若尚未开启）
+  useEffect(() => {
+    if (!isMusicOn) toggleMusic();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <QuizProvider>

@@ -1,3 +1,4 @@
+// src/components/StarCanvasBackground.tsx
 import React, { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing";
@@ -7,7 +8,7 @@ const STAR_COUNT = 1000;
 const SPEED = 0.1;
 
 function Stars() {
-  const mesh = useRef<InstancedMesh | null>(null);
+  const mesh = useRef<InstancedMesh>(null!);
   const dummy = useMemo(() => new Object3D(), []);
   const positions = useMemo(() => {
     const temp: Vector3[] = [];
@@ -21,24 +22,27 @@ function Stars() {
   }, []);
 
   useFrame(() => {
-    if (!mesh.current) return;
-
-    for (let i = 0; i < STAR_COUNT; i++) {
-      const pos = positions[i];
+    const instancedMesh = mesh.current!;
+    const obj = dummy;
+    positions.forEach((pos, i) => {
       pos.z += SPEED;
       if (pos.z > 0) pos.z = -200;
-
-      dummy.position.set(pos.x, pos.y, pos.z);
-      dummy.updateMatrix();
-      mesh.current.setMatrixAt(i, dummy.matrix);
-    }
-    mesh.current.instanceMatrix.needsUpdate = true;
+      obj.position.set(pos.x, pos.y, pos.z);
+      obj.updateMatrix();
+      instancedMesh.setMatrixAt(i, obj.matrix);
+    });
+    instancedMesh.instanceMatrix.needsUpdate = true;
   });
 
   return (
-    <instancedMesh ref={mesh} args={[undefined, undefined, STAR_COUNT]}>
-      <sphereGeometry args={[0.05, 6, 6]} />
-      <meshBasicMaterial color="white" />
+    <instancedMesh ref={mesh} args={[undefined, undefined, STAR_COUNT] as any}>
+      <sphereGeometry args={[0.08, 8, 8]} />
+      <meshStandardMaterial
+        emissive="white"
+        emissiveIntensity={2}
+        color="white"
+        toneMapped={false}
+      />
     </instancedMesh>
   );
 }
@@ -46,14 +50,20 @@ function Stars() {
 export default function StarCanvasBackground() {
   return (
     <div className="absolute top-0 left-0 w-screen h-screen z-0 pointer-events-none">
-      {/* 🔧 修正：加入 !filter-none 強制移除灰階 */}
       <Canvas
         className="w-full h-full !filter-none"
         camera={{ position: [0, 0, 5], fov: 75 }}
       >
+        <ambientLight intensity={0.5} />
         <Stars />
         <EffectComposer>
-          <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} />
+          <Bloom
+            luminanceThreshold={0.1}
+            luminanceSmoothing={0.5}
+            intensity={1.5}
+            radius={0.6}
+            height={300}
+          />
           <ChromaticAberration offset={[0.001, 0.001]} />
         </EffectComposer>
       </Canvas>
