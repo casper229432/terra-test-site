@@ -8,22 +8,22 @@ type Props = {
   toggleMute: () => void;
 };
 
-// 主遮罩淡入淡出
+// 遮罩淡入淡出
 const overlayVariants: Variants = {
-  hidden: { opacity: 0, transition: { duration: 0.2 } },
-  visible: { opacity: 1, transition: { duration: 0.2 } }
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 }
 };
 
-// 菜單垂直展開
+// 主菜單縱向展開
 const menuVariants: Variants = {
-  hidden: { scaleY: 0, transition: { duration: 0.2 } },
-  visible: { scaleY: 1, transition: { duration: 0.2 } }
+  hidden: { scaleY: 0, opacity: 0 },
+  visible: { scaleY: 1, opacity: 1 }
 };
 
-// 子選單收合
+// 子菜單收合
 const collapseVariants: Variants = {
-  hidden: { height: 0, opacity: 0, transition: { duration: 0.2 } },
-  visible: { height: "auto", opacity: 1, transition: { duration: 0.2 } }
+  hidden: { height: 0, opacity: 0 },
+  visible: { height: "auto", opacity: 1 }
 };
 
 const quadrantItems = [
@@ -37,7 +37,6 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
   const [open, setOpen] = useState(false);
   const [expandQuadrant, setExpandQuadrant] = useState(false);
 
-  const handleToggle = () => setOpen(prev => !prev);
   const handleClose = () => {
     setExpandQuadrant(false);
     setOpen(false);
@@ -47,7 +46,7 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
     <div className="relative z-30">
       {/* 漢堡按鈕 */}
       <button
-        onClick={handleToggle}
+        onClick={() => setOpen(prev => !prev)}
         className="text-white p-2 bg-black/40 rounded-md hover:bg-black/60 transition"
         aria-label={open ? "關閉選單" : "打開選單"}
       >
@@ -57,11 +56,10 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
       <AnimatePresence>
         {open && (
           <>
-            {/* 遮罩 */}
+            {/* 行動端遮罩 */}
             <motion.div
               key="overlay"
               className="fixed inset-0 bg-black/70 z-40 md:hidden"
-
               initial="hidden"
               animate="visible"
               exit="hidden"
@@ -70,13 +68,12 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
 
             {/* 行動端全屏菜單 */}
             <motion.div
-              key="mobile-menu"
-              className="fixed inset-0 bg-black text-white z-50 flex flex-col items-center p-6 md:hidden"
+              key="mobileMenu"
+              className="fixed inset-0 bg-black text-white z-50 flex flex-col items-start p-6 space-y-6 md:hidden origin-top"
               initial="hidden"
               animate="visible"
               exit="hidden"
               variants={menuVariants}
-              style={{ transformOrigin: "top" }}
             >
               <button
                 onClick={handleClose}
@@ -86,30 +83,30 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
                 <X size={32} />
               </button>
 
-              <div className="mt-4 space-y-6 w-full text-center">
-                {/* 聲音控制，不關閉菜單 */}
-                <div className="flex flex-col items-center space-y-2">
-                  <span className="text-lg">聲音控制</span>
+              <div className="space-y-4 w-full text-left">
+                {/* 聲音控制 */}
+                <div className="flex items-center justify-between">
+                  <span>聲音控制</span>
                   <button
                     onClick={toggleMute}
-                    className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 transition"
+                    className="px-3 py-1 bg-white text-black rounded hover:bg-gray-200 transition text-sm"
                   >
                     {isMuted ? "開啟" : "靜音"}
                   </button>
                 </div>
 
                 {/* 重新測驗 */}
-                <Link to="/" onClick={handleClose} className="block text-xl font-medium">
+                <Link onClick={handleClose} to="/" className="block">
                   重新測驗
                 </Link>
 
                 {/* 什麼是 TERRA？ */}
                 <a
+                  onClick={handleClose}
                   href="https://test.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={handleClose}
-                  className="block text-xl font-medium"
+                  className="block"
                 >
                   什麼是 TERRA？
                 </a>
@@ -118,33 +115,32 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
                 <div>
                   <button
                     onClick={() => setExpandQuadrant(prev => !prev)}
-                    className="w-full flex justify-center items-center text-xl font-medium gap-2"
+                    className="w-full flex justify-between items-center"
                   >
-                    四大象限 {expandQuadrant ? "－" : "+"}
+                    <span>四大象限</span>
+                    <span>{expandQuadrant ? '－' : '+'}</span>
                   </button>
                   <AnimatePresence>
                     {expandQuadrant && (
                       <motion.div
-                        className="overflow-hidden mt-2"
+                        className="overflow-hidden mt-2 pl-4"
                         initial="hidden"
                         animate="visible"
                         exit="hidden"
                         variants={collapseVariants}
                       >
-                        <div className="flex flex-col space-y-3">
-                          {quadrantItems.map(({ label, href }) => (
-                            <a
-                              key={label}
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={handleClose}
-                              className="text-lg text-center"
-                            >
-                              {label}
-                            </a>
-                          ))}
-                        </div>
+                        {quadrantItems.map(item => (
+                          <a
+                            key={item.label}
+                            onClick={handleClose}
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block py-1 text-sm"
+                          >
+                            {item.label}
+                          </a>
+                        ))}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -152,22 +148,22 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
 
                 {/* T 模型與四象限 */}
                 <a
+                  onClick={handleClose}
                   href="https://test.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={handleClose}
-                  className="block text-xl font-medium"
+                  className="block"
                 >
                   T 模型與四象限
                 </a>
 
                 {/* 白皮書 */}
                 <a
+                  onClick={handleClose}
                   href="https://test.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={handleClose}
-                  className="block text-xl font-medium"
+                  className="block"
                 >
                   白皮書
                 </a>
@@ -176,14 +172,14 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
 
             {/* 桌面端下拉菜單 */}
             <motion.div
-              key="desktop-menu"
-              className="absolute top-14 right-6 bg-black/70 text-white rounded-md shadow-lg p-4 w-52 hidden md:block transform origin-top-right"
+              key="desktopMenu"
+              className="absolute top-14 right-6 bg-black/70 text-white rounded-md shadow-lg p-4 w-52 hidden md:block origin-top-right"
               initial="hidden"
               animate="visible"
               exit="hidden"
               variants={menuVariants}
             >
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between mb-2">
                 <span>聲音控制</span>
                 <button
                   onClick={toggleMute}
@@ -193,67 +189,66 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
                 </button>
               </div>
 
-              <Link to="/" onClick={handleClose} className="block mt-3 hover:underline">
+              <Link onClick={handleClose} to="/" className="block mb-2 hover:underline">
                 重新測驗
               </Link>
               <a
+                onClick={handleClose}
                 href="https://test.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={handleClose}
-                className="block mt-2 hover:underline"
+                className="block mb-2 hover:underline"
               >
                 什麼是 TERRA？
               </a>
 
               <button
                 onClick={() => setExpandQuadrant(prev => !prev)}
-                className="mt-3 w-full flex justify-between items-center hover:underline"
+                className="w-full flex justify-between items-center mb-2 hover:underline"
               >
-                四大象限 {expandQuadrant ? "－" : "+"}
+                <span>四大象限</span>
+                <span>{expandQuadrant ? '－' : '+'}</span>
               </button>
               <AnimatePresence>
                 {expandQuadrant && (
                   <motion.div
-                    className="overflow-hidden mt-2 ml-2"
+                    className="overflow-hidden mb-2 pl-2"
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
                     variants={collapseVariants}
                   >
-                    <div className="space-y-1">
-                      {quadrantItems.map(({ label, href }) => (
-                        <a
-                          key={label}
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={handleClose}
-                          className="block hover:underline text-sm"
-                        >
-                          {label}
-                        </a>
-                      ))}
-                    </div>
+                    {quadrantItems.map(item => (
+                      <a
+                        key={item.label}
+                        onClick={handleClose}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm py-1 hover:underline"
+                      >
+                        {item.label}
+                      </a>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
 
               <a
+                onClick={handleClose}
                 href="https://test.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={handleClose}
-                className="block mt-3 hover:underline"
+                className="block mb-2 hover:underline"
               >
                 T 模型與四象限
               </a>
               <a
+                onClick={handleClose}
                 href="https://test.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={handleClose}
-                className="block mt-2 hover:underline"
+                className="block hover:underline"
               >
                 白皮書
               </a>
