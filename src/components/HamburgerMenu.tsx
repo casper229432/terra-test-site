@@ -84,9 +84,9 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
               </button>
 
               <div className="space-y-4 w-full text-left">
-                {/* 聲音控制 */}
+                {/* 背景音樂 */}
                 <div className="flex items-center justify-between">
-                  <span>聲音控制</span>
+                  <span>背景音樂</span>
                   <button
                     onClick={toggleMute}
                     className="px-3 py-1 bg-white text-black rounded hover:bg-gray-200 transition text-sm"
@@ -180,7 +180,7 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
               variants={menuVariants}
             >
               <div className="flex items-center justify-between mb-2">
-                <span>聲音控制</span>
+                <span>背景音樂</span>
                 <button
                   onClick={toggleMute}
                   className="px-2 py-1 bg-white text-black text-sm rounded hover:bg-gray-200"

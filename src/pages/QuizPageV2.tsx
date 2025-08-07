@@ -1,4 +1,3 @@
-// src/pages/QuizPageV2.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
@@ -17,7 +16,7 @@ const QuestionDisplay: React.FC = () => {
   } = useQuiz();
   const navigate = useNavigate();
 
-  const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
+  
   const [isSwitching, setIsSwitching] = useState(false);
 
   // 全局 touchstart blur
@@ -54,7 +53,7 @@ const QuestionDisplay: React.FC = () => {
       setTimeout(() => navigate("/result", { state: { result: scoreMap } }), 300);
     } else {
       setTimeout(() => {
-        setHasVisitedPrevious(false);
+        
         goToNext();
       }, 300);
     }
@@ -66,7 +65,7 @@ const QuestionDisplay: React.FC = () => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    setHasVisitedPrevious(true);
+    
     goToPrev();
   };
 
@@ -76,7 +75,7 @@ const QuestionDisplay: React.FC = () => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    setHasVisitedPrevious(false);
+    
     goToNext();
   };
 
@@ -115,7 +114,7 @@ const QuestionDisplay: React.FC = () => {
           </button>
         )}
 
-        {hasVisitedPrevious && currentQuestion < questions.length - 1 && (
+        {answers[currentQuestion] !== null && currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
             disabled={isSwitching}
