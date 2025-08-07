@@ -9,7 +9,7 @@ const StarfieldTransition: React.FC<StarfieldTransitionProps> = ({ onComplete })
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (onComplete) onComplete();
-    }, 1300);
+    }, 1500);
     return () => clearTimeout(timeout);
   }, [onComplete]);
 
@@ -20,7 +20,7 @@ const StarfieldTransition: React.FC<StarfieldTransitionProps> = ({ onComplete })
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 1.3, ease: "easeInOut" }}
+        transition={{ duration: 1.5, ease: "easeInOut" }}
       />
     </AnimatePresence>
   );
