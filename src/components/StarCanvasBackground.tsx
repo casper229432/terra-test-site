@@ -10,12 +10,12 @@ const STAR_COUNT = 1000;
 // 星星移動速度
 const SPEED = 0.1;
 // 星星幾何體大小
-const STAR_SIZE = 0.05;
+const STAR_SIZE = 0.06;
 // 星星幾何體細分程度 [radius, widthSegments, heightSegments]
 // 星星几何体参数：radius, widthSegments, heightSegments
 const STAR_GEOMETRY: [number, number, number] = [STAR_SIZE, 8, 8];
 // 星星自身發光強度
-const EMISSIVE_INTENSITY = 2;
+const EMISSIVE_INTENSITY = 1;
 // 環境光強度
 const AMBIENT_LIGHT_INTENSITY = 0.5;
 // Bloom 特效參數
