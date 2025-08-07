@@ -15,15 +15,24 @@ canvas {
   -webkit-filter: none !important;
 }
 
-/* 关闭移动端 tap 高亮 & 选中样式 */
-button,
-a,
-input,
-label {
+/* 全局：移除触控高亮 */
+* {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
+  -webkit-user-select: none;
   user-select: none;
+}
+
+/* 对按钮和链接禁用触摸高亮和默认 active 样式 */
+button,
+a {
   touch-action: manipulation;
+}
+
+button:active,
+a:active {
+  background-color: transparent !important;
+  color: inherit !important;
 }
 
 /* 在触屏设备上禁用聚焦 outline */
