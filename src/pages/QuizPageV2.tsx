@@ -93,7 +93,7 @@ const QuestionDisplay: React.FC = () => {
             key={idx}
             onClick={() => handleSelect(opt.type)}
             disabled={isSwitching}
-            className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white hover:text-black ${
               answers[currentQuestion] === opt.type
                 ? "bg-white text-black"
                 : "bg-black/30 text-white"
