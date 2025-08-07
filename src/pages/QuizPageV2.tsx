@@ -18,6 +18,7 @@ const QuestionDisplay: React.FC = () => {
   const navigate = useNavigate();
 
   const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
+  const [isSwitching, setIsSwitching] = useState(false);
 
   // 全局 touchstart blur
   useEffect(() => {
@@ -30,23 +31,24 @@ const QuestionDisplay: React.FC = () => {
     return () => window.removeEventListener("touchstart", handleTouch);
   }, []);
 
-  // 切题时 blur
+  // 切题时 reset isSwitching 并 blur
   useEffect(() => {
+    setIsSwitching(false);
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
   }, [currentQuestion]);
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
-    // 失焦
+    if (isSwitching) return;
+    setIsSwitching(true);
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
     selectAnswer(currentQuestion, value);
 
     if (currentQuestion === questions.length - 1) {
-      const updated = [...answers];
-      updated[currentQuestion] = value;
+      const updated = [...answers, value];
       const scoreMap = { A: 0, B: 0, C: 0, D: 0 };
       updated.forEach((ans) => ans && scoreMap[ans]++);
       setTimeout(() => navigate("/result", { state: { result: scoreMap } }), 300);
@@ -59,6 +61,8 @@ const QuestionDisplay: React.FC = () => {
   };
 
   const handlePrev = () => {
+    if (isSwitching) return;
+    setIsSwitching(true);
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -67,6 +71,8 @@ const QuestionDisplay: React.FC = () => {
   };
 
   const handleManualNext = () => {
+    if (isSwitching) return;
+    setIsSwitching(true);
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
@@ -86,12 +92,12 @@ const QuestionDisplay: React.FC = () => {
           <button
             key={idx}
             onClick={() => handleSelect(opt.type)}
-            onTouchStart={(e) => e.currentTarget.blur()}
-            className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none ${
+            disabled={isSwitching}
+            className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
               answers[currentQuestion] === opt.type
                 ? "bg-white text-black"
                 : "bg-black/30 text-white"
-            } hover:bg-white hover:text-black transition`}
+            }`}
           >
             {opt.text}
           </button>
@@ -102,8 +108,8 @@ const QuestionDisplay: React.FC = () => {
         {currentQuestion > 0 && (
           <button
             onClick={handlePrev}
-            onTouchStart={(e) => e.currentTarget.blur()}
-            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none"
+            disabled={isSwitching}
+            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
             上一頁
           </button>
@@ -112,8 +118,8 @@ const QuestionDisplay: React.FC = () => {
         {hasVisitedPrevious && currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
-            onTouchStart={(e) => e.currentTarget.blur()}
-            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none"
+            disabled={isSwitching}
+            className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
             下一頁
           </button>
