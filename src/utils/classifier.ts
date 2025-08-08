@@ -66,8 +66,9 @@ export function classify(scores: Scores): Classification {
   }
 
   // 🧩 T8｜三主核：恰有三項 = 5
-  const count5 = values.filter((v) => v === 5).length;
-  if (count5 === 3) {
+  const sortedValsDesc = [...values].sort((a, b) => b - a);
+  const eq5 = sortedValsDesc.filter((v) => v === 5).length;
+  if (eq5 === 3) {
     const letters = (sorted.filter(([, v]) => v === 5).map(([k]) => k) as (keyof Scores)[])
       .sort((a, b) => letterOrder.indexOf(a) - letterOrder.indexOf(b));
     return {
@@ -79,8 +80,10 @@ export function classify(scores: Scores): Classification {
     };
   }
 
-  // 🌈 T6｜均衡變化型：所有得分 ≤5（且不屬 T5/T7/T8，以上條件已排除）
-  if (values.every((v) => v <= 5)) {
+  // 🌈 T6｜均衡變化型（你的新版定義）：
+  // 最高分 ≤ 5，且第三高 ≤ 4（同時不屬於前面任何象限）
+  const [m1, , m3] = sortedValsDesc;
+  if (m1 <= 5 && m3 <= 4) {
     return { tier: "T6", code: "T6" };
   }
 
@@ -88,7 +91,7 @@ export function classify(scores: Scores): Classification {
   return { tier: "T5", main, code: `T5-${main}` };
 }
 
-// 供現有頁面呼叫
+// 提供現有頁面呼叫（只取代碼字串）
 export function pickPersonaId(scores: Scores): string {
   return classify(scores).code;
 }

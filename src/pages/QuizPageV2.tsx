@@ -6,47 +6,137 @@ import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
 import { questions } from "../data/questions";
 import StarCanvasBackground from "../components/StarCanvasBackground";
-import { countScores, pickPersonaId } from "../utils/classifier";
 
+/** ───────── 計分 + 分類 ───────── **/
+type Scores = { A: number; B: number; C: number; D: number };
+
+/** 將答案陣列轉成分數物件 */
+function computeScores(ans: Array<"A" | "B" | "C" | "D" | null>): Scores {
+  const s: Scores = { A: 0, B: 0, C: 0, D: 0 };
+  ans.forEach((a) => {
+    if (a) s[a] += 1;
+  });
+  return s;
+}
+
+/** 依你之前提供的規則，回傳 Terra 代碼（例：T1-B、T4-BC、T6） */
+function classify(scores: Scores): string {
+  const entries: Array<[keyof Scores, number]> = Object.entries(scores) as any;
+  // 穩定排序：分數大到小；同分 A>B>C>D
+  const order = ["A", "B", "C", "D"] as const;
+  entries.sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1];
+    return order.indexOf(a[0]) - order.indexOf(b[0]);
+  });
+
+  const [t1, t2, t3] = entries;
+  const main = t1[0], mainScore = t1[1];
+  const second = t2[0], secondScore = t2[1];
+  const thirdScore = t3[1];
+  const values = entries.map(([, v]) => v);
+
+  // T1：主型 ≥13
+  if (mainScore >= 13) return `T1-${main}`;
+
+  // T2：主型 ≥9 且 至少一副型 ≥4（第二高一定是那個副型）
+  if (mainScore >= 9 && values.some((v, i) => i > 0 && v >= 4)) {
+    return `T2-${main}${second}`;
+  }
+
+  // T3：主型 ≥9 且 其餘 <4
+  if (mainScore >= 9 && secondScore < 4 && thirdScore < 4) {
+    return `T3-${main}`;
+  }
+
+  // T7：雙主核（最高兩項相等且都 ≥6）
+  if (mainScore >= 6 && secondScore >= 6 && mainScore === secondScore) {
+    return `T7-${main}${second}`;
+  }
+
+  // T4：主型 6~8 且 至少一副型 ≥4
+  if (mainScore >= 6 && mainScore <= 8 && values.some((v, i) => i > 0 && v >= 4)) {
+    return `T4-${main}${second}`;
+  }
+
+  // T5：主型 6~8 且 第二高 ≤3（= 沒有副型 ≥4）
+  if (mainScore >= 6 && mainScore <= 8 && secondScore <= 3) {
+    return `T5-${main}`;
+  }
+
+  // T8：恰好三個等於 5
+  const eq5 = values.filter((v) => v === 5).length;
+  if (eq5 === 3) {
+    const letters = entries.filter(([, v]) => v === 5).map(([k]) => k).sort();
+    return `T8-${letters.join("")}`;
+  }
+
+  // T6：所有 ≤5（且前述皆不成立）
+  if (values.every((v) => v <= 5)) return "T6";
+
+  // 理論上不會到這；保底用主型輸出 T4 風格
+  return `T4-${main}${second}`;
+}
+
+/** ───────── 題目畫面 ───────── **/
 const QuestionDisplay: React.FC = () => {
-  const { currentQuestion, answers, selectAnswer, goToNext, goToPrev } = useQuiz();
+  const {
+    currentQuestion,
+    answers,
+    selectAnswer,
+    goToNext,
+    goToPrev,
+  } = useQuiz();
   const navigate = useNavigate();
+
+  const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
 
+  // 全局 touchstart blur
   useEffect(() => {
     const handleTouch = () => {
-      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
     };
     window.addEventListener("touchstart", handleTouch, { passive: true });
     return () => window.removeEventListener("touchstart", handleTouch);
   }, []);
 
+  // 切題時重置切換鎖並失焦
   useEffect(() => {
     setIsSwitching(false);
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   }, [currentQuestion]);
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
     if (isSwitching) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-
-    // 寫入答案
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    // 寫回當前題目的答案
     selectAnswer(currentQuestion, value);
 
     const isLast = currentQuestion === questions.length - 1;
+
     if (isLast) {
-      // 以「已選 + 本次點選」組合成最新答案
-      const updated = [...answers];
-      updated[currentQuestion] = value as any;
+      // 用「最新答案」計分：複製一份 answers 並覆蓋當前題
+      const updated = answers.slice();
+      updated[currentQuestion] = value;
 
-      const scores = countScores(updated as any);
-      const code = pickPersonaId(scores); // 依 T1~T8 規則產生碼（例如 T4-BC、T6）
+      const scoreMap = computeScores(updated);
+      const code = classify(scoreMap);
 
-      // ✅ 帶著分數一起去結果頁；若該 code 暫時沒內容會 fallback 到分數版
-      setTimeout(() => navigate(`/result/${code}`, { state: { scores } }), 300);
+      // 0.3s 的小延遲，保留你原本的節奏
+      setTimeout(() => {
+        // ★ 重要：導向帶 code 的結果頁，讓 ResultPage 走新邏輯
+        navigate(`/result/${code}`);
+      }, 300);
     } else {
       setTimeout(() => {
+        setHasVisitedPrevious(false);
         goToNext();
       }, 300);
     }
@@ -55,18 +145,22 @@ const QuestionDisplay: React.FC = () => {
   const handlePrev = () => {
     if (isSwitching) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setHasVisitedPrevious(true);
     goToPrev();
   };
 
   const handleManualNext = () => {
     if (isSwitching) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setHasVisitedPrevious(false);
     goToNext();
   };
-
-  const showNext = answers[currentQuestion] != null && currentQuestion < questions.length - 1;
 
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
@@ -102,7 +196,8 @@ const QuestionDisplay: React.FC = () => {
             上一頁
           </button>
         )}
-        {showNext && (
+
+        {hasVisitedPrevious && currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
             disabled={isSwitching}
@@ -116,6 +211,7 @@ const QuestionDisplay: React.FC = () => {
   );
 };
 
+/** ───────── 外層頁面 ───────── **/
 const QuizPageV2: React.FC = () => {
   const { isMusicOn, toggleMusic } = useMusic();
 
