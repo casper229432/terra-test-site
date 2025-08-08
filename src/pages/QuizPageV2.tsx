@@ -1,3 +1,4 @@
+// src/pages/QuizPageV2.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
@@ -5,18 +6,11 @@ import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
 import { questions } from "../data/questions";
 import StarCanvasBackground from "../components/StarCanvasBackground";
+import { countScores, pickPersonaId } from "../utils/classifier";
 
 const QuestionDisplay: React.FC = () => {
-  const {
-    currentQuestion,
-    answers,
-    selectAnswer,
-    goToNext,
-    goToPrev,
-  } = useQuiz();
+  const { currentQuestion, answers, selectAnswer, goToNext, goToPrev } = useQuiz();
   const navigate = useNavigate();
-
-  
   const [isSwitching, setIsSwitching] = useState(false);
 
   // 全局 touchstart blur
@@ -30,7 +24,7 @@ const QuestionDisplay: React.FC = () => {
     return () => window.removeEventListener("touchstart", handleTouch);
   }, []);
 
-  // 切题时重置切换锁并失焦
+  // 切題時解鎖並失焦
   useEffect(() => {
     setIsSwitching(false);
     if (document.activeElement instanceof HTMLElement) {
@@ -44,16 +38,22 @@ const QuestionDisplay: React.FC = () => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+
+    // 先寫進 Context
     selectAnswer(currentQuestion, value);
 
-    if (currentQuestion === questions.length - 1) {
-      const updated = [...answers, value];
-      const scoreMap = { A: 0, B: 0, C: 0, D: 0 };
-      updated.forEach((ans) => ans && scoreMap[ans]++);
-      setTimeout(() => navigate("/result", { state: { result: scoreMap } }), 300);
+    const isLast = currentQuestion === questions.length - 1;
+    if (isLast) {
+      // 構造最新答案陣列（避免 setState 非同步）
+      const updated = [...answers];
+      updated[currentQuestion] = value;
+
+      const scores = countScores(updated as any);
+      const id = pickPersonaId(scores); // 暫時：最高票字母 -> T1X（B= T1B）
+
+      setTimeout(() => navigate(`/result/${id}`), 300);
     } else {
       setTimeout(() => {
-        
         goToNext();
       }, 300);
     }
@@ -65,7 +65,6 @@ const QuestionDisplay: React.FC = () => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    
     goToPrev();
   };
 
@@ -75,9 +74,11 @@ const QuestionDisplay: React.FC = () => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    
     goToNext();
   };
+
+  const showNext =
+    answers[currentQuestion] != null && currentQuestion < questions.length - 1;
 
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
@@ -114,7 +115,7 @@ const QuestionDisplay: React.FC = () => {
           </button>
         )}
 
-        {answers[currentQuestion] !== null && currentQuestion < questions.length - 1 && (
+        {showNext && (
           <button
             onClick={handleManualNext}
             disabled={isSwitching}
@@ -131,7 +132,7 @@ const QuestionDisplay: React.FC = () => {
 const QuizPageV2: React.FC = () => {
   const { isMusicOn, toggleMusic } = useMusic();
 
-  // 仅在组件挂载时自动播放音乐（若尚未开启）
+  // 進入測驗頁自動播放（若尚未開）
   useEffect(() => {
     if (!isMusicOn) toggleMusic();
     // eslint-disable-next-line react-hooks/exhaustive-deps

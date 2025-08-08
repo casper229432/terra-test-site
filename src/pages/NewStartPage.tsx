@@ -19,7 +19,7 @@ const NewStartPage = () => {
 
   return (
     <div className="fixed top-0 left-0 w-screen h-screen bg-black text-white overflow-hidden">
-      {/* ✅ 使用你自訂的星星背景 */}
+      {/* ✅ 使用自訂的星星背景 */}
       <StarCanvasBackground />
 
       {/* ✅ 過場動畫 */}
