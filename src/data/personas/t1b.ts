@@ -2,11 +2,11 @@
 import { PersonaData } from "./types";
 
 export const T1B: PersonaData = {
-  id: "T1B",
+  id: "T1-B",                           // 與 index.ts 的 key 完全一致
   tag: "🧠 T1-B｜The Mastermind（暫名）",
   subtitle: "你不是表現自己，而是讓他人照著你的佈局行動。",
   composition: "B軸主導，策略/秩序導向，偏向冷靜決策。",
-  codeLabel: "T1B",
+  codeLabel: "T1-B",
   alias: "策劃者",
   rank: "T1",
   oneLiner: "以冷靜與縝密，讓複雜系統按你的步調運轉。",
@@ -29,12 +29,14 @@ export const T1B: PersonaData = {
   work: {
     fits: ["產品策略", "系統架構", "風控/法遵", "運營/流程設計"],
     style: "資料與證據導向，重視因果鍊與風險邊界，善於在宏觀與微觀間切換。",
-    mbti: ["INTJ", "ISTJ", "ENTJ"] // 只是示意，可改
+    mbti: ["INTJ", "ISTJ", "ENTJ"]
   },
   outro: "你善於讓世界有序運作。當你選擇以人為中心而不只是系統，世界會更完整。",
-  cover: "/personas/T1B.jpg", // 把你那張草稿圖放到 public/personas/T1B.jpg
+  cover: "/personas/T1B.jpg",           // 你放在 public/personas/T1B.jpg → 路徑這樣寫
   theme: {
     primary: "from-indigo-500",
-    accent: "text-amber-300"
+    accent: "text-amber-300",
+    // 需要更細的排版時可以加：
+    // layout: { imageOn: "left", align: "left", imageMaxW: "max-w-[420px]", contentMaxW: "max-w-2xl" },
   }
 };

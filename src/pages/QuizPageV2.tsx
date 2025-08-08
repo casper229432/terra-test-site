@@ -13,45 +13,38 @@ const QuestionDisplay: React.FC = () => {
   const navigate = useNavigate();
   const [isSwitching, setIsSwitching] = useState(false);
 
-  // 全局 touchstart blur
   useEffect(() => {
     const handleTouch = () => {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     };
     window.addEventListener("touchstart", handleTouch, { passive: true });
     return () => window.removeEventListener("touchstart", handleTouch);
   }, []);
 
-  // 切題時解鎖並失焦
   useEffect(() => {
     setIsSwitching(false);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   }, [currentQuestion]);
 
   const handleSelect = (value: "A" | "B" | "C" | "D") => {
     if (isSwitching) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
 
-    // 先寫進 Context
+    // 寫入答案
     selectAnswer(currentQuestion, value);
 
     const isLast = currentQuestion === questions.length - 1;
     if (isLast) {
-      // 構造最新答案陣列（避免 setState 非同步）
+      // 以「已選 + 本次點選」組合成最新答案
       const updated = [...answers];
-      updated[currentQuestion] = value;
+      updated[currentQuestion] = value as any;
 
       const scores = countScores(updated as any);
-      const id = pickPersonaId(scores); // 暫時：最高票字母 -> T1X（B= T1B）
+      const code = pickPersonaId(scores); // 依 T1~T8 規則產生碼（例如 T4-BC、T6）
 
-      setTimeout(() => navigate(`/result/${id}`), 300);
+      // ✅ 帶著分數一起去結果頁；若該 code 暫時沒內容會 fallback 到分數版
+      setTimeout(() => navigate(`/result/${code}`, { state: { scores } }), 300);
     } else {
       setTimeout(() => {
         goToNext();
@@ -62,23 +55,18 @@ const QuestionDisplay: React.FC = () => {
   const handlePrev = () => {
     if (isSwitching) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     goToPrev();
   };
 
   const handleManualNext = () => {
     if (isSwitching) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     goToNext();
   };
 
-  const showNext =
-    answers[currentQuestion] != null && currentQuestion < questions.length - 1;
+  const showNext = answers[currentQuestion] != null && currentQuestion < questions.length - 1;
 
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
@@ -114,7 +102,6 @@ const QuestionDisplay: React.FC = () => {
             上一頁
           </button>
         )}
-
         {showNext && (
           <button
             onClick={handleManualNext}
@@ -132,7 +119,6 @@ const QuestionDisplay: React.FC = () => {
 const QuizPageV2: React.FC = () => {
   const { isMusicOn, toggleMusic } = useMusic();
 
-  // 進入測驗頁自動播放（若尚未開）
   useEffect(() => {
     if (!isMusicOn) toggleMusic();
     // eslint-disable-next-line react-hooks/exhaustive-deps
