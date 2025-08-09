@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Oswald:ital,wght@1,700&display=swap');
 
 html,
@@ -9,13 +13,11 @@ body,
   padding: 0;
 }
 
-/* 强制让所有 canvas 不受灰阶或其他滤镜影响 */
 canvas {
   filter: none !important;
   -webkit-filter: none !important;
 }
 
-/* 全局：移除触控高亮 */
 * {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
@@ -23,7 +25,6 @@ canvas {
   user-select: none;
 }
 
-/* 对按钮和链接禁用触摸高亮和默认 active 样式 */
 button,
 a {
   touch-action: manipulation;
@@ -35,7 +36,6 @@ a:active {
   color: inherit !important;
 }
 
-/* 在触屏设备上禁用聚焦 outline */
 @media (hover: none) {
   button:focus,
   a:focus,
@@ -45,13 +45,6 @@ a:active {
     box-shadow: none !important;
   }
 }
-
-/* 保持桌面版 hover 效果 */
-/* hover:bg-white hover:text-black 由组件内 Tailwind 控制 */
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 @keyframes fade-in {
   from {
@@ -63,7 +56,24 @@ a:active {
     transform: translateY(0);
   }
 }
-
 .animate-fade-in {
   animation: fade-in 0.2s ease-out;
+}
+
+button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 桌面版 hover */
+@layer utilities {
+  @media (hover: hover) and (pointer: fine) {
+    .btn-answer-hover:hover { @apply bg-white text-black; }
+  }
+}
+
+/* 手機進入頁面瞬間清除 hover 殘留 */
+.no-hover *:hover {
+  background: none !important;
+  color: inherit !important;
 }
