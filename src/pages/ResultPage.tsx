@@ -1,6 +1,8 @@
 // src/pages/ResultPage.tsx
-import React, { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import StarCanvasBackground from "../components/StarCanvasBackground";
 import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
@@ -10,20 +12,68 @@ import { PERSONAS } from "../data/personas";
 // 若你有正式的型別，改成正確的 import；沒有就先用 any
 type PersonaData = any;
 
+/** 轉場覆蓋層（淡入） */
+const PageTransition: React.FC<{ show: boolean; onComplete?: () => void }> = ({
+  show,
+  onComplete,
+}) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        key="fade"
+        className="fixed inset-0 z-[60] pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.28, ease: "easeInOut" }}
+        onAnimationComplete={onComplete}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-black/95 to-black" />
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+/** Terra 風格的二顆主按鈕（共用樣式） */
+type TerraButtonProps = HTMLMotionProps<"button"> & { subtle?: boolean };
+
+const TerraButton: React.FC<TerraButtonProps> = ({
+  children,
+  subtle,
+  className = "",
+  ...rest
+}) => (
+  <motion.button
+    whileHover={{ scale: 1.03 }}
+    whileTap={{ scale: 0.97 }}
+    className={
+      "px-5 md:px-6 py-2.5 md:py-3 rounded-full text-sm md:text-base font-semibold tracking-wide " +
+      (subtle
+        ? "bg-white/10 border border-white/20 text-white backdrop-blur-sm hover:bg-white/20 focus:outline-none "
+        : "bg-white text-black shadow-lg hover:shadow-xl focus:outline-none ") +
+      className
+    }
+    {...rest}
+  >
+    {children}
+  </motion.button>
+);
+
 /**
  * 手機也維持左圖右文的雙欄排版
- * - grid 直接用 `grid-cols-12`
- * - 圖片欄：col-span-5，限制最大寬避免把版面吃光
- * - 文字欄：col-span-7，字級/間距在小螢幕縮一點
  */
-const PersonaView: React.FC<{ data: PersonaData }> = ({ data }) => {
+const PersonaView: React.FC<{
+  data: PersonaData;
+  onGoHome: () => void;
+  onRetake: () => void;
+}> = ({ data, onGoHome, onRetake }) => {
   return (
     <main className="relative z-20 mx-auto w-full max-w-6xl px-4 md:px-6 py-8 md:py-10">
       <div className="grid grid-cols-12 gap-4 md:gap-8 items-start text-left">
         {/* 左側：圖片 */}
         <div className="col-span-5 flex justify-center">
           {data?.cover && (
-            <div className="w-full max-w-[220px] xs:max-w-[240px] sm:max-w-[260px] md:max-w-[420px]">
+            <div className="w-full max-w-[240px] sm:max-w-[260px] md:max-w-[420px]">
               <img
                 src={data.cover}
                 alt={data.alias ?? data.tag ?? data.code}
@@ -161,16 +211,10 @@ const PersonaView: React.FC<{ data: PersonaData }> = ({ data }) => {
             </section>
           )}
 
-          <div className="pt-1 md:pt-2 flex gap-3">
-            <Link to="/" className="px-4 py-2 bg-white text-black rounded">
-              回到首頁
-            </Link>
-            <Link
-              to="/quiz2"
-              className="px-4 py-2 bg-white/80 text-black rounded"
-            >
-              再測一次
-            </Link>
+          {/* 行動區：Terra 風格精簡版 */}
+          <div className="pt-1 md:pt-2 flex flex-wrap gap-3">
+            <TerraButton onClick={onGoHome}>回到首頁</TerraButton>
+            <TerraButton subtle onClick={onRetake}>再測一次</TerraButton>
           </div>
         </div>
       </div>
@@ -179,7 +223,11 @@ const PersonaView: React.FC<{ data: PersonaData }> = ({ data }) => {
 };
 
 // 沒資料時的占位頁（不露分數）
-const PlaceholderView: React.FC<{ code: string }> = ({ code }) => (
+const PlaceholderView: React.FC<{
+  code: string;
+  onGoHome: () => void;
+  onRetake: () => void;
+}> = ({ code, onGoHome, onRetake }) => (
   <main className="relative z-20 mx-auto w-full max-w-3xl px-6 py-16 text-center">
     <h1 className="text-3xl font-bold">你的 Terra 代碼</h1>
     <div className="mt-4 text-4xl font-extrabold">{code}</div>
@@ -187,12 +235,8 @@ const PlaceholderView: React.FC<{ code: string }> = ({ code }) => (
       人格內容建置中，稍後將開放閱讀。你可以先回到首頁或重新測驗。
     </p>
     <div className="mt-8 flex items-center justify-center gap-3">
-      <Link to="/" className="px-4 py-2 bg-white text-black rounded">
-        回到首頁
-      </Link>
-      <Link to="/quiz2" className="px-4 py-2 bg-white/80 text-black rounded">
-        再測一次
-      </Link>
+      <TerraButton onClick={onGoHome}>回到首頁</TerraButton>
+      <TerraButton subtle onClick={onRetake}>再測一次</TerraButton>
     </div>
   </main>
 );
@@ -200,11 +244,28 @@ const PlaceholderView: React.FC<{ code: string }> = ({ code }) => (
 const ResultPage: React.FC = () => {
   const { code } = useParams<{ code?: string }>();
   const { isMusicOn, toggleMusic } = useMusic();
+  const navigate = useNavigate();
 
+  // 進入頁面時確保音樂開啟
   useEffect(() => {
     if (!isMusicOn) toggleMusic();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 轉場控制
+  const [leaving, setLeaving] = useState(false);
+  const [targetPath, setTargetPath] = useState<string | null>(null);
+
+  const goWithTransition = (path: string) => {
+    if (leaving) return;
+    setTargetPath(path);
+    setLeaving(true);
+    // 等轉場層淡入再導頁
+    setTimeout(() => navigate(path), 280);
+  };
+
+  const handleGoHome = () => goWithTransition("/");
+  const handleRetake = () => goWithTransition("/quiz2");
 
   const normalized = code?.toUpperCase();
   const persona: PersonaData | undefined = normalized
@@ -213,19 +274,31 @@ const ResultPage: React.FC = () => {
 
   return (
     <div className="relative w-screen min-h-screen overflow-y-auto bg-black text-white">
+      {/* 背景 */}
       <div className="absolute inset-0 z-0">
         <StarCanvasBackground />
       </div>
       <div className="absolute inset-0 bg-black/60 z-10" />
+
+      {/* 漢堡選單 */}
       <div className="absolute top-4 right-4 z-30">
         <HamburgerMenu isMuted={!isMusicOn} toggleMute={toggleMusic} />
       </div>
 
+      {/* 內容 */}
       {persona ? (
-        <PersonaView data={persona} />
+        <PersonaView data={persona} onGoHome={handleGoHome} onRetake={handleRetake} />
       ) : (
-        <PlaceholderView code={normalized ?? "—"} />
+        <PlaceholderView code={normalized ?? "—"} onGoHome={handleGoHome} onRetake={handleRetake} />
       )}
+
+      {/* 轉場覆蓋層 */}
+      <PageTransition
+        show={leaving}
+        onComplete={() => {
+          if (targetPath) navigate(targetPath);
+        }}
+      />
     </div>
   );
 };
