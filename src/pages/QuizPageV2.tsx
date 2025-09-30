@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
+// src/pages/QuizPageV2.tsx
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
 import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
@@ -10,8 +12,32 @@ import StarCanvasBackground from "../components/StarCanvasBackground";
 // CRA 不支援 "@/..." 別名；因為 tsconfig 有 baseUrl:"src" → 用 "utils/..." 絕對匯入
 import { countScores, pickPersonaId, Answer } from "utils/classifier";
 
+/** 轉場覆蓋層（與 ResultPage 一致：淡入→導頁） */
+const PageTransition: React.FC<{ show: boolean; onComplete?: () => void }> = ({
+  show,
+  onComplete,
+}) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        key="fade"
+        className="fixed inset-0 z-[60] pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.28, ease: "easeInOut" }}
+        onAnimationComplete={onComplete}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-black/95 to-black" />
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
 /** ───────── 題目畫面 ───────── **/
-const QuestionDisplay: React.FC = () => {
+const QuestionDisplay: React.FC<{
+  onNavigateWithTransition: (path: string) => void;
+}> = ({ onNavigateWithTransition }) => {
   const {
     currentQuestion,
     answers,
@@ -19,10 +45,9 @@ const QuestionDisplay: React.FC = () => {
     goToNext,
     goToPrev,
   } = useQuiz();
-  const navigate = useNavigate();
 
-  const [hasVisitedPrevious, setHasVisitedPrevious] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false); // ✅ 提交後防連點
 
   // 全局 touchstart → 失焦，避免手機殘留 focus/hover
   useEffect(() => {
@@ -44,7 +69,7 @@ const QuestionDisplay: React.FC = () => {
   }, [currentQuestion]);
 
   const handleSelect = (value: Exclude<Answer, null>) => {
-    if (isSwitching) return;
+    if (isSwitching || isNavigating) return;
     setIsSwitching(true);
 
     if (document.activeElement instanceof HTMLElement) {
@@ -61,41 +86,41 @@ const QuestionDisplay: React.FC = () => {
       const updated = answers.slice() as Answer[];
       updated[currentQuestion] = value;
 
-      // ✅ 用 classifier 統計 + 產生 Terra 代碼
+      // ✅ 用 classifier 統計 + 產生 Terra 代碼（只走 /result/:code）
       const scores = countScores(updated);
       const code = pickPersonaId(scores); // 例如 "T4-BC" / "T1-B" / "T6" / "T8-ABC"
 
-      // 小延遲保留原有節奏
-      setTimeout(() => {
-        navigate(`/result/${code}`);
-      }, 300);
+      // ✅ 轉場導航：觸發覆蓋層 → 動畫完成再導頁（與 ResultPage 一致）
+      setIsNavigating(true); // 防連點：禁用所有互動
+      onNavigateWithTransition(`/result/${code}`);
     } else {
+      // 保留原有節奏的小延遲，再切到下一題
       setTimeout(() => {
-        setHasVisitedPrevious(false);
         goToNext();
       }, 300);
     }
   };
 
   const handlePrev = () => {
-    if (isSwitching) return;
+    if (isSwitching || isNavigating) return;
     setIsSwitching(true);
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    setHasVisitedPrevious(true);
     goToPrev();
   };
 
   const handleManualNext = () => {
-    if (isSwitching) return;
+    if (isSwitching || isNavigating) return;
     setIsSwitching(true);
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    setHasVisitedPrevious(false);
     goToNext();
   };
+
+  // ✅ 僅在已作答 且 非最後一題 時顯示「下一頁」
+  const hasAnsweredCurrent = answers[currentQuestion] !== null;
 
   return (
     <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
@@ -109,7 +134,7 @@ const QuestionDisplay: React.FC = () => {
           <button
             key={idx}
             onClick={() => handleSelect(opt.type as Exclude<Answer, null>)}
-            disabled={isSwitching}
+            disabled={isSwitching || isNavigating}
             className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed btn-answer-hover ${
               answers[currentQuestion] === opt.type
                 ? "bg-white text-black"
@@ -125,17 +150,17 @@ const QuestionDisplay: React.FC = () => {
         {currentQuestion > 0 && (
           <button
             onClick={handlePrev}
-            disabled={isSwitching}
+            disabled={isSwitching || isNavigating}
             className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
             上一頁
           </button>
         )}
 
-        {hasVisitedPrevious && currentQuestion < questions.length - 1 && (
+        {hasAnsweredCurrent && currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
-            disabled={isSwitching}
+            disabled={isSwitching || isNavigating}
             className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
             下一頁
@@ -149,6 +174,18 @@ const QuestionDisplay: React.FC = () => {
 /** ───────── 外層頁面 ───────── **/
 const QuizPageV2: React.FC = () => {
   const { isMusicOn, toggleMusic } = useMusic();
+  const navigate = useNavigate();
+
+  // 轉場控制（與 ResultPage 同步語感）
+  const [leaving, setLeaving] = useState(false);
+  const [targetPath, setTargetPath] = useState<string | null>(null);
+  const hasNavigatedRef = useRef(false); // ✅ 防止 onAnimationComplete 重複觸發時二次導頁
+
+  const goWithTransition = (path: string) => {
+    if (leaving) return; // 二次點擊保護
+    setTargetPath(path);
+    setLeaving(true);
+  };
 
   useEffect(() => {
     if (!isMusicOn) toggleMusic();
@@ -158,16 +195,32 @@ const QuizPageV2: React.FC = () => {
   return (
     <QuizProvider>
       <div className="relative w-screen h-screen overflow-hidden bg-black">
+        {/* 背景 */}
         <div className="absolute inset-0 z-0">
           <StarCanvasBackground />
         </div>
         <div className="absolute inset-0 bg-black/60 z-10" />
+
+        {/* 內容 */}
         <div className="relative z-20 w-full h-full flex items-center justify-center">
-          <QuestionDisplay />
+          <QuestionDisplay onNavigateWithTransition={goWithTransition} />
         </div>
+
+        {/* 漢堡選單 */}
         <div className="absolute top-4 right-4 z-30">
           <HamburgerMenu isMuted={!isMusicOn} toggleMute={toggleMusic} />
         </div>
+
+        {/* 轉場覆蓋層（動畫完成後才 navigate） */}
+        <PageTransition
+          show={leaving}
+          onComplete={() => {
+            if (!hasNavigatedRef.current && targetPath) {
+              hasNavigatedRef.current = true; // ✅ 僅導頁一次
+              navigate(targetPath);
+            }
+          }}
+        />
       </div>
     </QuizProvider>
   );

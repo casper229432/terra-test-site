@@ -43,8 +43,9 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
   };
 
   return (
-    <div className="relative z-30">
-      {/* 漢堡按鈕 */}
+    // ⬆️ 提高層級，確保右上角按鈕在 overlay 之上
+    <div className="relative z-[70]">
+      {/* 漢堡按鈕（切換開關） */}
       <button
         onClick={() => setOpen(prev => !prev)}
         className="text-white p-2 bg-black/40 rounded-md hover:bg-black/60 transition"
@@ -56,7 +57,7 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
       <AnimatePresence>
         {open && (
           <>
-            {/* 行動端遮罩 */}
+            {/* 行動端遮罩（可點擊關閉） */}
             <motion.div
               key="overlay"
               className="fixed inset-0 bg-black/70 z-40 md:hidden"
@@ -64,6 +65,22 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
               animate="visible"
               exit="hidden"
               variants={overlayVariants}
+              onClick={handleClose} // ⬅️ 點遮罩關閉
+              aria-label="關閉選單"
+              role="button"
+            />
+
+            {/* 桌面端遮罩（可點擊關閉，避免背景干擾） */}
+            <motion.div
+              key="overlay-desktop"
+              className="fixed inset-0 bg-black/30 z-40 hidden md:block"
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              variants={overlayVariants}
+              onClick={handleClose} // ⬅️ 點遮罩關閉
+              aria-label="關閉選單"
+              role="button"
             />
 
             {/* 行動端全屏菜單 */}
@@ -170,10 +187,10 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
               </div>
             </motion.div>
 
-            {/* 桌面端下拉菜單 */}
+            {/* 桌面端下拉菜單（不透明底、清楚邊界） */}
             <motion.div
               key="desktopMenu"
-              className="absolute top-14 right-6 bg-black/70 text-white rounded-md shadow-lg p-4 w-52 hidden md:block origin-top-right"
+              className="absolute top-14 right-6 bg-black text-white border border-white/10 rounded-md shadow-lg p-4 w-56 md:w-64 hidden md:block origin-top-right z-50"
               initial="hidden"
               animate="visible"
               exit="hidden"

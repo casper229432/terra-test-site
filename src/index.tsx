@@ -15,14 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<App />} />
           <Route path="/quiz2" element={<QuizPageV2 />} />
-
-          {/* 新版結果頁：帶 code */}
+          {/* 正規結果頁（帶 code） */}
           <Route path="/result/:code" element={<ResultPage />} />
-
-          {/* 舊版保留（如果有人直接打 /result） */}
-          <Route path="/result" element={<ResultPage />} />
-
-          {/* ★ 萬用路由：任何未知路由都回首頁，避免白畫面 */}
+          {/* 萬用路由：未知路由回首頁 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
