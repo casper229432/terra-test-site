@@ -1,4 +1,3 @@
-// src/pages/QuizPageV2.tsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,16 +6,10 @@ import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
 import { questions } from "../data/questions";
 import StarCanvasBackground from "../components/StarCanvasBackground";
-
-// ✅ 用 classifier 的嚴謹規則來計分與產生代碼
-// CRA 不支援 "@/..." 別名；因為 tsconfig 有 baseUrl:"src" → 用 "utils/..." 絕對匯入
 import { countScores, pickPersonaId, Answer } from "utils/classifier";
 
 /** 轉場覆蓋層（與 ResultPage 一致：淡入→導頁） */
-const PageTransition: React.FC<{ show: boolean; onComplete?: () => void }> = ({
-  show,
-  onComplete,
-}) => (
+const PageTransition: React.FC<{ show: boolean; onComplete?: () => void }> = ({ show, onComplete }) => (
   <AnimatePresence>
     {show && (
       <motion.div
@@ -35,66 +28,45 @@ const PageTransition: React.FC<{ show: boolean; onComplete?: () => void }> = ({
 );
 
 /** ───────── 題目畫面 ───────── **/
-const QuestionDisplay: React.FC<{
-  onNavigateWithTransition: (path: string) => void;
-}> = ({ onNavigateWithTransition }) => {
-  const {
-    currentQuestion,
-    answers,
-    selectAnswer,
-    goToNext,
-    goToPrev,
-  } = useQuiz();
+const QuestionDisplay: React.FC<{ onNavigateWithTransition: (path: string) => void }> = ({
+  onNavigateWithTransition,
+}) => {
+  const { currentQuestion, answers, selectAnswer, goToNext, goToPrev } = useQuiz();
 
   const [isSwitching, setIsSwitching] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false); // ✅ 提交後防連點
+  const [isNavigating, setIsNavigating] = useState(false);
 
-  // 全局 touchstart → 失焦，避免手機殘留 focus/hover
   useEffect(() => {
     const handleTouch = () => {
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur();
-      }
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     };
     window.addEventListener("touchstart", handleTouch, { passive: true });
     return () => window.removeEventListener("touchstart", handleTouch);
   }, []);
 
-  // 切題時重置鎖並失焦
   useEffect(() => {
     setIsSwitching(false);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
   }, [currentQuestion]);
 
   const handleSelect = (value: Exclude<Answer, null>) => {
     if (isSwitching || isNavigating) return;
     setIsSwitching(true);
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
 
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-
-    // 寫回當前題目的答案
     selectAnswer(currentQuestion, value);
-
     const isLast = currentQuestion === questions.length - 1;
 
     if (isLast) {
-      // 用「最新答案」計分：複製 answers 並覆蓋當前題
       const updated = answers.slice() as Answer[];
       updated[currentQuestion] = value;
 
-      // ✅ 用 classifier 統計 + 產生 Terra 代碼（只走 /result/:code）
       const scores = countScores(updated);
-      const code = pickPersonaId(scores); // 例如 "T4-BC" / "T1-B" / "T6" / "T8-ABC"
+      const code = pickPersonaId(scores);
 
-      // ✅ 轉場導航：觸發覆蓋層 → 動畫完成再導頁（與 ResultPage 一致）
-      setIsNavigating(true); // 防連點：禁用所有互動
+      setIsNavigating(true);
       onNavigateWithTransition(`/result/${code}`);
     } else {
-      // 保留原有節奏的小延遲，再切到下一題
       setTimeout(() => {
         goToNext();
       }, 300);
@@ -104,26 +76,21 @@ const QuestionDisplay: React.FC<{
   const handlePrev = () => {
     if (isSwitching || isNavigating) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     goToPrev();
   };
 
   const handleManualNext = () => {
     if (isSwitching || isNavigating) return;
     setIsSwitching(true);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     goToNext();
   };
 
-  // ✅ 僅在已作答 且 非最後一題 時顯示「下一頁」
   const hasAnsweredCurrent = answers[currentQuestion] !== null;
 
   return (
-    <div className="relative z-20 flex flex-col items-center justify-center h-full text-white text-center px-4 space-y-6">
+    <div className="relative z-20 flex flex-col items-center justify-center min-h-screen-dvh text-white text-center px-4 space-y-6">
       <div className="text-xl">{`第 ${currentQuestion + 1} 題 / ${questions.length}`}</div>
       <div className="text-2xl font-semibold max-w-xl">
         {questions[currentQuestion].question}
@@ -136,9 +103,7 @@ const QuestionDisplay: React.FC<{
             onClick={() => handleSelect(opt.type as Exclude<Answer, null>)}
             disabled={isSwitching || isNavigating}
             className={`px-6 py-3 rounded-lg text-lg font-medium border focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed btn-answer-hover ${
-              answers[currentQuestion] === opt.type
-                ? "bg-white text-black"
-                : "bg-black/30 text-white"
+              answers[currentQuestion] === opt.type ? "bg-white text-black" : "bg-black/30 text-white"
             }`}
           >
             {opt.text}
@@ -176,13 +141,12 @@ const QuizPageV2: React.FC = () => {
   const { isMusicOn, toggleMusic } = useMusic();
   const navigate = useNavigate();
 
-  // 轉場控制（與 ResultPage 同步語感）
   const [leaving, setLeaving] = useState(false);
   const [targetPath, setTargetPath] = useState<string | null>(null);
-  const hasNavigatedRef = useRef(false); // ✅ 防止 onAnimationComplete 重複觸發時二次導頁
+  const hasNavigatedRef = useRef(false);
 
   const goWithTransition = (path: string) => {
-    if (leaving) return; // 二次點擊保護
+    if (leaving) return;
     setTargetPath(path);
     setLeaving(true);
   };
@@ -194,15 +158,15 @@ const QuizPageV2: React.FC = () => {
 
   return (
     <QuizProvider>
-      <div className="relative w-screen h-screen overflow-hidden bg-black">
-        {/* 背景 */}
-        <div className="absolute inset-0 z-0">
+      <div className="relative w-screen min-h-screen-dvh overflow-hidden bg-black">
+        {/* 背景：固定鋪滿 */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
           <StarCanvasBackground />
         </div>
-        <div className="absolute inset-0 bg-black/60 z-10" />
+        <div className="fixed inset-0 bg-black/60 z-10 pointer-events-none" />
 
         {/* 內容 */}
-        <div className="relative z-20 w-full h-full flex items-center justify-center">
+        <div className="relative z-20 w-full min-h-screen-dvh flex items-center justify-center">
           <QuestionDisplay onNavigateWithTransition={goWithTransition} />
         </div>
 
@@ -216,7 +180,7 @@ const QuizPageV2: React.FC = () => {
           show={leaving}
           onComplete={() => {
             if (!hasNavigatedRef.current && targetPath) {
-              hasNavigatedRef.current = true; // ✅ 僅導頁一次
+              hasNavigatedRef.current = true;
               navigate(targetPath);
             }
           }}

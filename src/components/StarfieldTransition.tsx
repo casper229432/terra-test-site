@@ -1,27 +1,28 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type StarfieldTransitionProps = {
+type Props = {
   onComplete?: () => void;
+  durationMs?: number; // 預設 1200ms
 };
 
-const StarfieldTransition: React.FC<StarfieldTransitionProps> = ({ onComplete }) => {
+const StarfieldTransition: React.FC<Props> = ({ onComplete, durationMs = 1200 }) => {
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (onComplete) onComplete();
-    }, 1500);
-    return () => clearTimeout(timeout);
-  }, [onComplete]);
+    const id = window.setTimeout(() => onComplete?.(), durationMs);
+    return () => window.clearTimeout(id);
+  }, [onComplete, durationMs]);
 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed top-0 left-0 w-screen h-screen bg-black z-50"
+        className="fixed inset-0 z-[80] pointer-events-none"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 1.5, ease: "easeInOut" }}
-      />
+        transition={{ duration: durationMs / 1000, ease: "easeInOut" }}
+      >
+        <div className="absolute inset-0 bg-black" />
+      </motion.div>
     </AnimatePresence>
   );
 };

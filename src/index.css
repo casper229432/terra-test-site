@@ -77,3 +77,16 @@ button, [role="button"] {
   background: none !important;
   color: inherit !important;
 }
+/* ===== iOS Safari 100vh 白邊修正：動態視窗高 ===== */
+.h-screen-dvh { height: 100vh; min-height: 100vh; }
+.min-h-screen-dvh { min-height: 100vh; }
+
+@supports (height: 100dvh) {
+  .h-screen-dvh { height: 100dvh; min-height: 100dvh; }
+  .min-h-screen-dvh { min-height: 100dvh; }
+}
+
+/* 建議：確保可以延伸到瀏海安全區 */
+html, body {
+  background: #000;
+}

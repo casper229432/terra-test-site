@@ -1,4 +1,3 @@
-// src/pages/ResultPage.tsx
 import React, { useEffect, useMemo, useState, useLayoutEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -232,13 +231,12 @@ const ResultPage: React.FC = () => {
   const toggleExpanded = () => setExpanded((v) => !v);
 
   return (
-    <div className="relative w-screen min-h-screen overflow-y-auto bg-black text-white">
-      {/* 背景：改為 fixed + 100dvh */}
-      <div className="fixed left-0 top-0 w-[100vw] h-[100dvh] z-0 pointer-events-none">
+    <div className="relative w-screen min-h-screen-dvh overflow-y-auto bg-black text-white">
+      {/* 背景：固定鋪滿 */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <StarCanvasBackground />
       </div>
-      {/* 半透明黑遮罩 */}
-      <div className="fixed left-0 top-0 w-[100vw] h-[100dvh] bg-black/60 z-10" />
+      <div className="fixed inset-0 bg-black/60 z-10 pointer-events-none" />
 
       {/* 漢堡選單 */}
       <div className="absolute top-4 right-4 z-30">
@@ -253,29 +251,26 @@ const ResultPage: React.FC = () => {
             <div className="text-sm tracking-widest font-semibold opacity-80 text-center md:text-left">Terra</div>
           </div>
 
-          {/* HERO 區：縮圖＋置中對齊 */}
+          {/* HERO 區 */}
           <HeroHeader data={persona} code={normalized!} />
 
-          {/* 描述框：超滑順收合 */}
+          {/* 描述框 */}
           <div className="mt-6">
             <CosmicFrameShell title="人格描述">
               <CollapsibleContent expanded={expanded} collapsedHeight={240}>
                 {mainDescription ? <>{mainDescription}</> : <span className="text-white/70">此代碼的人格描述尚未填寫。</span>}
               </CollapsibleContent>
 
-              {/* 折疊提示漸層（僅在收合時顯示） */}
               <FadeHint show={!expanded} />
 
-              {/* 控制列 */}
               <div className="flex justify-end gap-3 px-5 pb-5 -mt-2">
                 <TerraButton subtle onClick={toggleExpanded} aria-expanded={expanded}>
-                  {expanded ? "展開全文" : "收回"}
+                  {expanded ? "收回" : "展開全文"}
                 </TerraButton>
               </div>
             </CosmicFrameShell>
           </div>
 
-          {/* 行動按鈕 */}
           <div className="mt-6 flex flex-wrap gap-3">
             <TerraButton onClick={handleGoHome}>回到首頁</TerraButton>
             <TerraButton subtle onClick={handleRetake}>再測一次</TerraButton>
@@ -283,7 +278,6 @@ const ResultPage: React.FC = () => {
         </main>
       )}
 
-      {/* 轉場覆蓋層 */}
       <PageTransition
         show={leaving}
         onComplete={() => {
