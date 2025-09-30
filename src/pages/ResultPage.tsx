@@ -269,7 +269,7 @@ const ResultPage: React.FC = () => {
               {/* 控制列 */}
               <div className="flex justify-end gap-3 px-5 pb-5 -mt-2">
                 <TerraButton subtle onClick={toggleExpanded} aria-expanded={expanded}>
-                  {expanded ? "收回" : "展開全文"}
+                  {expanded ? "展開全文" : "收回"}
                 </TerraButton>
               </div>
             </CosmicFrameShell>
