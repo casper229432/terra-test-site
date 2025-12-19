@@ -5,9 +5,10 @@ import type { HTMLMotionProps } from "framer-motion";
 import StarCanvasBackground from "../components/StarCanvasBackground";
 import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
+import { useLanguage } from "../context/LanguageContext";
 import { PERSONAS } from "../data/personas";
-
-type PersonaData = any;
+import type { PersonaData, Lang, MaybeI18nText } from "../data/personas/types";
+import { pickText } from "../data/personas/types";
 
 /** 轉場覆蓋層（淡入） */
 const PageTransition: React.FC<{ show: boolean; onComplete?: () => void }> = ({ show, onComplete }) => (
@@ -103,7 +104,10 @@ const CollapsibleContent: React.FC<{ expanded: boolean; collapsedHeight?: number
       animate={{ height: target }}
       transition={{ type: "spring", stiffness: 260, damping: 28, mass: 0.8 }}
     >
-      <div ref={ref} className="px-5 py-5 text-[15px] md:text-[16px] leading-7 md:leading-8 text-white/95 whitespace-pre-line">
+      <div
+        ref={ref}
+        className="px-5 py-5 text-[15px] md:text-[16px] leading-7 md:leading-8 text-white/95 whitespace-pre-line"
+      >
         {children}
       </div>
     </motion.div>
@@ -126,11 +130,20 @@ const FadeHint: React.FC<{ show: boolean }> = ({ show }) => (
   </AnimatePresence>
 );
 
+/** i18n: 若是 {zh,en}，取另一語言做次標（用於 HERO 顯示 zh|en） */
+const getOtherLangText = (v: MaybeI18nText, lang: Lang): string | undefined => {
+  if (typeof v === "string") return undefined;
+  const other = lang === "zh" ? v.en : v.zh;
+  return other && other.trim().length > 0 ? other : undefined;
+};
+
 /** HERO：收斂尺寸，確保一屏可截圖 + 完全置中 */
-const HeroHeader: React.FC<{ data: PersonaData; code: string }> = ({ data, code }) => {
-  const zhTitle: string | undefined = useMemo(() => data?.tag ?? data?.alias ?? undefined, [data]);
-  const enTitle: string | undefined = useMemo(() => data?.aliasEn ?? data?.en ?? data?.alias ?? undefined, [data]);
-  const subtitle = data?.subtitle ?? "你不是表現自己，而是讓他人照著你的佈局行動。";
+const HeroHeader: React.FC<{ data: PersonaData; code: string; language: Lang }> = ({ data, code, language }) => {
+  // 主要顯示：tag（可中英）
+  const mainTitle = useMemo(() => pickText(data.tag, language), [data, language]);
+  const otherTitle = useMemo(() => getOtherLangText(data.tag, language), [data, language]);
+
+  const subtitle = useMemo(() => pickText(data.subtitle, language), [data, language]);
 
   return (
     <section className="grid grid-cols-12 gap-6 lg:gap-8 items-start">
@@ -140,7 +153,7 @@ const HeroHeader: React.FC<{ data: PersonaData; code: string }> = ({ data, code 
           <div className="rounded-[20px] border border-white/10 bg-white/5 p-3 shadow-xl">
             <img
               src={data.cover}
-              alt={zhTitle ?? code}
+              alt={mainTitle ?? code}
               className="w-full h-full object-contain rounded-[14px] border border-white/10"
               style={{ maxHeight: "42vh", maxWidth: "300px" }}
             />
@@ -154,11 +167,11 @@ const HeroHeader: React.FC<{ data: PersonaData; code: string }> = ({ data, code 
           {code}
         </div>
 
-        {(zhTitle || enTitle) && (
+        {(mainTitle || otherTitle) && (
           <div className="mt-3 text-xl md:text-2xl font-semibold">
-            {zhTitle}
-            {zhTitle && enTitle && <span className="mx-3 text-white/60">|</span>}
-            {enTitle && <span className="uppercase tracking-[0.25em] text-white/85">{enTitle}</span>}
+            {mainTitle}
+            {mainTitle && otherTitle && <span className="mx-3 text-white/60">|</span>}
+            {otherTitle && <span className="uppercase tracking-[0.25em] text-white/85">{otherTitle}</span>}
           </div>
         )}
 
@@ -166,16 +179,16 @@ const HeroHeader: React.FC<{ data: PersonaData; code: string }> = ({ data, code 
 
         <div className="mt-4 space-y-2.5 md:space-y-3 text-[15px] md:text-base">
           <div className="flex gap-2 justify-center">
-            <div className="text-white/70">代號：</div>
+            <div className="text-white/70">{language === "zh" ? "代號：" : "Code:"}</div>
             <div className="font-semibold">{data?.codeLabel ?? code}</div>
           </div>
           <div className="flex gap-2 justify-center">
-            <div className="text-white/70">位階：</div>
+            <div className="text-white/70">{language === "zh" ? "位階：" : "Tier:"}</div>
             <div className="font-semibold">{data?.rank ?? code.split("-")[0]}</div>
           </div>
           <div className="flex gap-2 justify-center">
-            <div className="text-white/70">人格組成：</div>
-            <div className="font-semibold">{data?.composition ?? "—"}</div>
+            <div className="text-white/70">{language === "zh" ? "人格組成：" : "Composition:"}</div>
+            <div className="font-semibold">{pickText(data?.composition ?? "—", language)}</div>
           </div>
         </div>
       </div>
@@ -184,19 +197,24 @@ const HeroHeader: React.FC<{ data: PersonaData; code: string }> = ({ data, code 
 };
 
 // 沒資料時的占位
-const PlaceholderView: React.FC<{ code: string; onGoHome: () => void; onRetake: () => void }> = ({
-  code,
-  onGoHome,
-  onRetake,
-}) => (
+const PlaceholderView: React.FC<{
+  code: string;
+  onGoHome: () => void;
+  onRetake: () => void;
+  language: Lang;
+}> = ({ code, onGoHome, onRetake, language }) => (
   <main className="relative z-20 mx-auto w-full max-w-3xl px-6 py-16 text-center">
     <div className="text-sm tracking-widest font-semibold opacity-80">Terra</div>
-    <h1 className="mt-3 text-3xl font-bold">你的 Terra 代碼</h1>
+    <h1 className="mt-3 text-3xl font-bold">{language === "zh" ? "你的 Terra 代碼" : "Your Terra Code"}</h1>
     <div className="mt-4 text-5xl font-extrabold font-terra">{code}</div>
-    <p className="mt-6 text-white/80">人格內容建置中，稍後將開放閱讀。你可以先回到首頁或重新測驗。</p>
+    <p className="mt-6 text-white/80">
+      {language === "zh"
+        ? "人格內容建置中，稍後將開放閱讀。你可以先回到首頁或重新測驗。"
+        : "This persona is still under construction. You can go back home or retake the test for now."}
+    </p>
     <div className="mt-8 flex items-center justify-center gap-3">
-      <TerraButton onClick={onGoHome}>回到首頁</TerraButton>
-      <TerraButton subtle onClick={onRetake}>再測一次</TerraButton>
+      <TerraButton onClick={onGoHome}>{language === "zh" ? "回到首頁" : "Home"}</TerraButton>
+      <TerraButton subtle onClick={onRetake}>{language === "zh" ? "再測一次" : "Retake"}</TerraButton>
     </div>
   </main>
 );
@@ -204,6 +222,7 @@ const PlaceholderView: React.FC<{ code: string; onGoHome: () => void; onRetake: 
 const ResultPage: React.FC = () => {
   const { code } = useParams<{ code?: string }>();
   const { isMusicOn, toggleMusic } = useMusic();
+  const { language } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -223,12 +242,25 @@ const ResultPage: React.FC = () => {
   const handleRetake = () => goWithTransition("/quiz2");
 
   const normalized = code?.toUpperCase();
-  const persona: PersonaData | undefined = normalized ? (PERSONAS as any)[normalized] : undefined;
+  const persona: PersonaData | undefined = normalized ? (PERSONAS as Record<string, PersonaData>)[normalized] : undefined;
 
-  const mainDescription: string | undefined = persona?.description ?? persona?.oneLiner;
+  const mainDescription = useMemo(() => {
+    if (!persona) return undefined;
+    // 優先 description，沒有就用 oneLiner
+    const desc = persona.description ? pickText(persona.description, language) : "";
+    if (desc && desc.trim().length > 0) return desc;
+    return persona.oneLiner ? pickText(persona.oneLiner, language) : undefined;
+  }, [persona, language]);
 
   const [expanded, setExpanded] = useState(true);
   const toggleExpanded = () => setExpanded((v) => !v);
+
+  const title = language === "zh" ? "人格描述" : "Persona Description";
+  const emptyText = language === "zh" ? "此代碼的人格描述尚未填寫。" : "Description for this code is not available yet.";
+  const collapseText = language === "zh" ? "收回" : "Collapse";
+  const expandText = language === "zh" ? "展開全文" : "Read more";
+  const homeText = language === "zh" ? "回到首頁" : "Home";
+  const retakeText = language === "zh" ? "再測一次" : "Retake";
 
   return (
     <div className="relative w-screen min-h-screen-dvh overflow-y-auto bg-black text-white">
@@ -244,7 +276,7 @@ const ResultPage: React.FC = () => {
       </div>
 
       {!persona ? (
-        <PlaceholderView code={normalized ?? "—"} onGoHome={handleGoHome} onRetake={handleRetake} />
+        <PlaceholderView code={normalized ?? "—"} onGoHome={handleGoHome} onRetake={handleRetake} language={language} />
       ) : (
         <main className="relative z-20 mx-auto w-full max-w-6xl px-4 md:px-6 py-6 md:py-8">
           <div className="mb-4">
@@ -252,28 +284,28 @@ const ResultPage: React.FC = () => {
           </div>
 
           {/* HERO 區 */}
-          <HeroHeader data={persona} code={normalized!} />
+          <HeroHeader data={persona} code={normalized!} language={language} />
 
           {/* 描述框 */}
           <div className="mt-6">
-            <CosmicFrameShell title="人格描述">
+            <CosmicFrameShell title={title}>
               <CollapsibleContent expanded={expanded} collapsedHeight={240}>
-                {mainDescription ? <>{mainDescription}</> : <span className="text-white/70">此代碼的人格描述尚未填寫。</span>}
+                {mainDescription ? <>{mainDescription}</> : <span className="text-white/70">{emptyText}</span>}
               </CollapsibleContent>
 
               <FadeHint show={!expanded} />
 
               <div className="flex justify-end gap-3 px-5 pb-5 -mt-2">
                 <TerraButton subtle onClick={toggleExpanded} aria-expanded={expanded}>
-                  {expanded ? "收回" : "展開全文"}
+                  {expanded ? collapseText : expandText}
                 </TerraButton>
               </div>
             </CosmicFrameShell>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <TerraButton onClick={handleGoHome}>回到首頁</TerraButton>
-            <TerraButton subtle onClick={handleRetake}>再測一次</TerraButton>
+            <TerraButton onClick={handleGoHome}>{homeText}</TerraButton>
+            <TerraButton subtle onClick={handleRetake}>{retakeText}</TerraButton>
           </div>
         </main>
       )}

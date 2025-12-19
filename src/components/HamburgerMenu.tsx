@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext"; // ✅ 新增
 
 type Props = {
   isMuted: boolean;
@@ -36,10 +37,19 @@ const quadrantItems = [
 const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
   const [open, setOpen] = useState(false);
   const [expandQuadrant, setExpandQuadrant] = useState(false);
+  const [expandLanguage, setExpandLanguage] = useState(false); // ✅ 新增
+
+  const { language, setLanguage } = useLanguage(); // ✅ 新增
 
   const handleClose = () => {
     setExpandQuadrant(false);
+    setExpandLanguage(false); // ✅ 新增
     setOpen(false);
+  };
+
+  const handlePickLanguage = (lang: "zh" | "en") => {
+    setLanguage(lang);
+    handleClose();
   };
 
   return (
@@ -112,6 +122,42 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
                   </button>
                 </div>
 
+                {/* ✅ Language */}
+                <div>
+                  <button
+                    onClick={() => setExpandLanguage(prev => !prev)}
+                    className="w-full flex justify-between items-center"
+                  >
+                    <span>Language</span>
+                    <span>{expandLanguage ? "－" : "+"}</span>
+                  </button>
+
+                  <AnimatePresence>
+                    {expandLanguage && (
+                      <motion.div
+                        className="overflow-hidden mt-2 pl-4"
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={collapseVariants}
+                      >
+                        <button
+                          onClick={() => handlePickLanguage("zh")}
+                          className="block py-1 text-sm text-left w-full"
+                        >
+                          {language === "zh" ? "✓ 中文" : "中文"}
+                        </button>
+                        <button
+                          onClick={() => handlePickLanguage("en")}
+                          className="block py-1 text-sm text-left w-full"
+                        >
+                          {language === "en" ? "✓ English" : "English"}
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 {/* 重新測驗 */}
                 <Link onClick={handleClose} to="/" className="block">
                   重新測驗
@@ -135,7 +181,7 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
                     className="w-full flex justify-between items-center"
                   >
                     <span>四大象限</span>
-                    <span>{expandQuadrant ? '－' : '+'}</span>
+                    <span>{expandQuadrant ? "－" : "+"}</span>
                   </button>
                   <AnimatePresence>
                     {expandQuadrant && (
@@ -206,6 +252,39 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
                 </button>
               </div>
 
+              {/* ✅ Language（桌面端也用同一套展開樣式） */}
+              <button
+                onClick={() => setExpandLanguage(prev => !prev)}
+                className="w-full flex justify-between items-center mb-2 hover:underline"
+              >
+                <span>Language</span>
+                <span>{expandLanguage ? "－" : "+"}</span>
+              </button>
+              <AnimatePresence>
+                {expandLanguage && (
+                  <motion.div
+                    className="overflow-hidden mb-2 pl-2"
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={collapseVariants}
+                  >
+                    <button
+                      onClick={() => handlePickLanguage("zh")}
+                      className="block text-sm py-1 hover:underline text-left w-full"
+                    >
+                      {language === "zh" ? "✓ 中文" : "中文"}
+                    </button>
+                    <button
+                      onClick={() => handlePickLanguage("en")}
+                      className="block text-sm py-1 hover:underline text-left w-full"
+                    >
+                      {language === "en" ? "✓ English" : "English"}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <Link onClick={handleClose} to="/" className="block mb-2 hover:underline">
                 重新測驗
               </Link>
@@ -224,7 +303,7 @@ const HamburgerMenu: React.FC<Props> = ({ isMuted, toggleMute }) => {
                 className="w-full flex justify-between items-center mb-2 hover:underline"
               >
                 <span>四大象限</span>
-                <span>{expandQuadrant ? '－' : '+'}</span>
+                <span>{expandQuadrant ? "－" : "+"}</span>
               </button>
               <AnimatePresence>
                 {expandQuadrant && (

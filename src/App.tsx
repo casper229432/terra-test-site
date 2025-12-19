@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMusic } from "./context/MusicContext";
+import { useLanguage } from "./context/LanguageContext"; // ✅ 新增
 import HamburgerMenu from "./components/HamburgerMenu";
 import StarfieldTransition from "./components/StarfieldTransition";
 import StarCanvasBackground from "./components/StarCanvasBackground";
@@ -9,6 +10,7 @@ import StarCanvasBackground from "./components/StarCanvasBackground";
 const App: React.FC = () => {
   const navigate = useNavigate();
   const { isMusicOn, toggleMusic } = useMusic();
+  const { language } = useLanguage(); // ✅ 新增
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
@@ -66,7 +68,7 @@ const App: React.FC = () => {
           className={`mt-6 px-8 py-3 rounded-full text-lg font-semibold shadow-xl focus:outline-none
           ${isTransitioning ? "pointer-events-none opacity-70" : "bg-white text-black"}`}
         >
-          開始測驗
+          {language === "zh" ? "開始測驗" : "Start"} {/* ✅ 這行才是重點 */}
         </motion.button>
       </div>
 

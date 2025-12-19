@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { QuizProvider, useQuiz } from "../context/QuizContext";
 import HamburgerMenu from "../components/HamburgerMenu";
 import { useMusic } from "../context/MusicContext";
-import { questions } from "../data/questions";
+import { getQuestions } from "../data/questions";
+import { useLanguage } from "../context/LanguageContext";
 import StarCanvasBackground from "../components/StarCanvasBackground";
 import { countScores, pickPersonaId, Answer } from "utils/classifier";
 
@@ -32,6 +33,9 @@ const QuestionDisplay: React.FC<{ onNavigateWithTransition: (path: string) => vo
   onNavigateWithTransition,
 }) => {
   const { currentQuestion, answers, selectAnswer, goToNext, goToPrev } = useQuiz();
+
+  const { language } = useLanguage();
+  const questions = useMemo(() => getQuestions(language), [language]);
 
   const [isSwitching, setIsSwitching] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -89,12 +93,20 @@ const QuestionDisplay: React.FC<{ onNavigateWithTransition: (path: string) => vo
 
   const hasAnsweredCurrent = answers[currentQuestion] !== null;
 
+  const t = {
+    progress:
+      language === "zh"
+        ? `第 ${currentQuestion + 1} 題 / ${questions.length}`
+        : `Question ${currentQuestion + 1} / ${questions.length}`,
+    prev: language === "zh" ? "上一頁" : "Back",
+    next: language === "zh" ? "下一頁" : "Next",
+  };
+
   return (
     <div className="relative z-20 flex flex-col items-center justify-center min-h-screen-dvh text-white text-center px-4 space-y-6">
-      <div className="text-xl">{`第 ${currentQuestion + 1} 題 / ${questions.length}`}</div>
-      <div className="text-2xl font-semibold max-w-xl">
-        {questions[currentQuestion].question}
-      </div>
+      <div className="text-xl">{t.progress}</div>
+
+      <div className="text-2xl font-semibold max-w-xl">{questions[currentQuestion].question}</div>
 
       <div className="grid grid-cols-2 gap-4 mt-6">
         {questions[currentQuestion].options.map((opt, idx) => (
@@ -111,6 +123,7 @@ const QuestionDisplay: React.FC<{ onNavigateWithTransition: (path: string) => vo
         ))}
       </div>
 
+      {/* ✅ 修正：下一頁永遠顯示（非最後一題），未作答時 disabled，確保中英一致 */}
       <div className="flex space-x-4 mt-10">
         {currentQuestion > 0 && (
           <button
@@ -118,17 +131,17 @@ const QuestionDisplay: React.FC<{ onNavigateWithTransition: (path: string) => vo
             disabled={isSwitching || isNavigating}
             className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            上一頁
+            {t.prev}
           </button>
         )}
 
-        {hasAnsweredCurrent && currentQuestion < questions.length - 1 && (
+        {currentQuestion < questions.length - 1 && (
           <button
             onClick={handleManualNext}
-            disabled={isSwitching || isNavigating}
+            disabled={!hasAnsweredCurrent || isSwitching || isNavigating}
             className="px-4 py-2 bg-white/80 text-black rounded hover:bg-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            下一頁
+            {t.next}
           </button>
         )}
       </div>

@@ -73,4 +73,25 @@ describe("classifier｜分層與代碼", () => {
       expect(pickPersonaId(s)).toMatch(re);
     }
   });
+
+  // ⭐ 新增：分類結果不受作答順序影響
+  test("分類結果不受作答順序影響（同一組 A/B/C/D 總數）", () => {
+    const baseAnswers: Answer[] = buildAnswers(8, 4, 4, 0); // 換其他分佈也可
+    const baseCode = classify(countScores(baseAnswers)).code;
+
+    // 簡單洗牌（Fisher–Yates），每次都產生新序列
+    const shuffle = <T,>(arr: T[]): T[] => {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    };
+
+    for (let i = 0; i < 30; i++) {
+      const code = classify(countScores(shuffle(baseAnswers))).code;
+      expect(code).toBe(baseCode);
+    }
+  });
 });
